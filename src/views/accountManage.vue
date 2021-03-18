@@ -1,11 +1,17 @@
 <template>
-  <div class="home">
-    <div class="home__searchBox">
-      <strong>最近1日新增資料</strong>
-      <!-- 長條圖 -->
+  <div class="accountManage">
+    <div class="accountManage__title">
+      <strong>帳號管理</strong>
     </div>
 
-    <div class="home__listBox">
+    <div class="accountManage__listBox">
+      <div class="accountManage__listBox--add">
+        <span>
+          <i class="el-icon-plus"></i>
+          <a>新增</a>
+        </span>
+      </div>
+
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55">
         </el-table-column>
@@ -23,19 +29,8 @@
 
 <script>
 export default {
-  name: "Home",
   data() {
     return {
-      listQuery: {
-        // sDate: "",
-        // eDate: "",
-        // query: "",
-        // order: "",
-        // nSite: "",
-        // nChannel: "",
-        page: 1,
-        // pageSize: 10,
-      },
       tableData: [
         {
           date: "2016-05-03",
@@ -77,11 +72,6 @@ export default {
     };
   },
   methods: {
-    getList() {
-      this.$api.getNewsList(this.listQuery).then((res) => {
-        console.log(res);
-      });
-    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -95,29 +85,55 @@ export default {
       this.multipleSelection = val;
     },
   },
-  mounted() {
-    this.getList();
-  },
 };
 </script>
 
 <style lang="scss">
-.home {
+.accountManage {
   width: 100%;
   height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
 
-  &__searchBox {
-    padding: 20px;
-    border-bottom: 1px solid #191972;
+  &__title {
+    width: 100%;
+    padding-top: 20px;
+    text-align: center;
 
     strong {
-      font-size: 24px;
       color: #191972;
+      letter-spacing: 2px;
+      font-size: 26px;
     }
   }
 
   &__listBox {
-    padding: 20px;
+    width: 100%;
+    margin-top: 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex-direction: column;
+
+    &--add {
+      span {
+        transition: 0.6s;
+        cursor: pointer;
+        i,
+        a {
+          font-size: 18px;
+          font-weight: bold;
+          color: #191972;
+        }
+        i {
+          padding-right: 4px;
+        }
+
+        &:hover {
+          letter-spacing: 2px;
+        }
+      }
+    }
   }
 }
 </style>

@@ -1,31 +1,100 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+      <!-- <el-container> -->
+      <el-aside class="mainLayoutAside" :class="{ isCollapse: isCollapse }" v-if="!$route.meta.hideMenu">
+        <div class="mainLayoutAside__title">
+          <img src="@/assets/images/logo.png" alt="logo" width="80px">
+          <strong v-if="userInfo">{{userInfo.name}}</strong>
+        </div>
+
+        <el-menu :default-active="$route.name" :collapse-transition="false" :unique-opened="uniqueOp" :collapse="isCollapse" background-color="#191972" text-color="#fff" active-text-color="#ffd04b" :router="true">
+          <Sidebar :isCollapse="isCollapse" v-for="menu in routes" :key="menu.id" :item="menu" />
+        </el-menu>
+      </el-aside>
+
+      <el-main :class="{ withUp: isCollapse, noBar: $route.meta.hideMenu }">
+        <div class="viewHeight">
+          <router-view></router-view>
+        </div>
+      </el-main>
     </div>
-    <router-view/>
   </div>
 </template>
 
+<script>
+import Sidebar from "./components/Sidebar.vue";
+
+export default {
+  components: { Sidebar },
+  data() {
+    return {
+      userInfo: null,
+      isCollapse: false,
+      uniqueOp: true,
+      routes: [],
+      transitionName: "slide-left",
+    };
+  },
+  mounted() {
+    // menu
+    let NavigationBar = JSON.parse(
+      window.localStorage.menu ? window.localStorage.menu : null
+    );
+    if (this.routes.length <= 0 && NavigationBar && NavigationBar.length >= 0) {
+      this.routes = NavigationBar;
+    }
+
+    // user
+    this.userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
+  },
+};
+</script>
+
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
 #nav {
-  padding: 30px;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
+  .mainLayoutAside {
+    position: fixed;
+    z-index: 2;
+    height: 100vh;
+    background: #191972;
+    color: #fff;
+    transition: 0.5s;
+    width: 200px !important;
 
-    &.router-link-exact-active {
-      color: #42b983;
+    &.isCollapse {
+      width: auto !important;
+    }
+
+    &__title {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+
+      strong {
+        font-size: 24px;
+        color: white;
+      }
+    }
+  }
+
+  .el-main {
+    padding: 0;
+    height: 100%;
+    margin-left: 200px;
+
+    &.withUp {
+      margin-left: 70px;
+    }
+
+    &.noBar {
+      margin-left: 0 !important;
     }
   }
 }

@@ -1,11 +1,32 @@
 <template>
-  <div class="home">
-    <div class="home__searchBox">
-      <strong>最近1日新增資料</strong>
-      <!-- 長條圖 -->
+  <div class="backtrackAnalysis">
+    <div class="backtrackAnalysis__searchBox">
+      <div class="backtrackAnalysis__searchBox--datetime">
+        <label>分析日期：</label>
+        <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+        </el-date-picker>
+      </div>
+
+      <div class="backtrackAnalysis__searchBox--fromAndBtn">
+        <div class="analysisFrom">
+          <label>分析來源：</label>
+          <el-select v-model="analysisFrom" placeholder="請選擇查詢來源">
+            <el-option label="請選擇" value="">
+            </el-option>
+          </el-select>
+        </div>
+
+        <div class="analysisBtn">
+          <el-button type="primary">分析</el-button>
+        </div>
+      </div>
     </div>
 
-    <div class="home__listBox">
+    <div class="backtrackAnalysis__listBox">
+      <div class="backtrackAnalysis__listBox--title">
+        <strong>新詞代表</strong>
+      </div>
+
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55">
         </el-table-column>
@@ -23,19 +44,10 @@
 
 <script>
 export default {
-  name: "Home",
   data() {
     return {
-      listQuery: {
-        // sDate: "",
-        // eDate: "",
-        // query: "",
-        // order: "",
-        // nSite: "",
-        // nChannel: "",
-        page: 1,
-        // pageSize: 10,
-      },
+      dateRange: "",
+      analysisFrom: "",
       tableData: [
         {
           date: "2016-05-03",
@@ -77,11 +89,6 @@ export default {
     };
   },
   methods: {
-    getList() {
-      this.$api.getNewsList(this.listQuery).then((res) => {
-        console.log(res);
-      });
-    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -95,29 +102,58 @@ export default {
       this.multipleSelection = val;
     },
   },
-  mounted() {
-    this.getList();
-  },
 };
 </script>
 
 <style lang="scss">
-.home {
+.backtrackAnalysis {
   width: 100%;
   height: 100vh;
 
   &__searchBox {
+    width: 100%;
     padding: 20px;
+    box-sizing: border-box;
     border-bottom: 1px solid #191972;
 
-    strong {
-      font-size: 24px;
-      color: #191972;
+    label {
+      font-weight: 600;
+      color: #2a2a2a;
+      letter-spacing: 2px;
+      font-size: 18px;
+    }
+
+    &--fromAndBtn {
+      width: 100%;
+      margin-top: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .analysisFrom {
+        width: 100%;
+      }
+
+      .analysisBtn {
+        width: 100%;
+        text-align: center;
+      }
     }
   }
 
   &__listBox {
+    width: 100%;
     padding: 20px;
+    box-sizing: border-box;
+
+    &--title {
+      width: 100%;
+      text-align: center;
+      color: #191972;
+      letter-spacing: 2px;
+      font-size: 26px;
+    }
   }
 }
 </style>
