@@ -26,3 +26,48 @@ body {
 .el-menu {
     border-right: none !important;
 }
+
+.el-dialog {
+    background-color: #43c8d4 !important;
+    border-radius: 30px !important;
+
+    &__title {
+        font-weight: bold !important;
+        font-size: 24px !important;
+        color: white !important;
+    }
+
+    &__body {
+        .el-form {
+            &-item {
+                &__label {
+                    font-weight: bold !important;
+                    font-size: 18px !important;
+                    color: white !important;
+                    letter-spacing: 2px !important;
+                }
+
+                &__error {
+                    font-weight: bold !important;
+                    font-size: 14px !important;
+                    letter-spacing: 2px !important;
+                }
+            }
+        }
+    }
+}
+
+.moveR-enter-active,
+.moveR-leave-active {
+    transition: all 0.4s linear;
+    transform: translateX(0);
+}
+
+.moveR-enter,
+.moveR-leave {
+    transform: translateX(100%);
+}
+
+.moveR-leave-to {
+    transform: translateX(100%);
+}

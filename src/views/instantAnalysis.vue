@@ -45,7 +45,21 @@ export default {
   data() {
     return {
       activeName: "",
+      listQuery: {
+        UserId: 3,
+        content: "XXXYYYaAADDREFADF",
+      },
     };
+  },
+  methods: {
+    getList() {
+      this.$api.getEntities(this.listQuery).then((res) => {
+        console.log(res);
+      });
+    },
+  },
+  mounted() {
+    this.getList();
   },
 };
 </script>
@@ -60,6 +74,7 @@ export default {
 
   &__setting {
     position: absolute;
+    z-index: 10;
     top: 0;
     right: 0;
     padding: 16px 8px;

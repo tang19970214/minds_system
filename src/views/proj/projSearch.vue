@@ -1,26 +1,28 @@
 <template>
   <div class="projSearch">
-    <div class="projSearch__searchBox">
-      <div class="projSearch__searchBox--setting">
-        <strong>查詢設定</strong>
-      </div>
-
-      <div class="projSearch__searchBox--sort">
-        <label>專卷分類：</label>
-        <el-select v-model="projSort" placeholder="請選擇專卷分類">
-          <el-option label="請選擇" value="">
-          </el-option>
-        </el-select>
-      </div>
-
-      <div class="projSearch__searchBox--theme">
-        <label>專卷主題：</label>
-        <el-select v-model="projTheme" placeholder="請選擇專卷主題">
-          <el-option label="請選擇" value="">
-          </el-option>
-        </el-select>
-      </div>
+    <div class="projSearch__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
     </div>
+
+    <transition name="moveR">
+      <div class="projSearch__searchBox" v-if="openSearchBox">
+        <div class="projSearch__searchBox--sort">
+          <label>專卷分類：</label>
+          <el-select v-model="projSort" placeholder="請選擇專卷分類">
+            <el-option label="請選擇" value="">
+            </el-option>
+          </el-select>
+        </div>
+
+        <div class="projSearch__searchBox--theme">
+          <label>專卷主題：</label>
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題">
+            <el-option label="請選擇" value="">
+            </el-option>
+          </el-select>
+        </div>
+      </div>
+    </transition>
 
     <div class="projSearch__listBox">
       <div class="projSearch__listBox--joinAnalysis">
@@ -35,15 +37,21 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
+        <el-table-column type="selection" width="50">
         </el-table-column>
-        <el-table-column label="日期" width="120">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
+        <el-table-column label="序號" type="index" width="50">
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120">
+        <el-table-column label="新聞標題" prop="newsTitle">
         </el-table-column>
-        <el-table-column prop="address" label="地址" show-overflow-tooltip>
+        <el-table-column label="新聞時間" width="150">
+          <!-- <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template> -->
+        </el-table-column>
+        <el-table-column label="新聞網站" prop="newsUrl">
+        </el-table-column>
+        <el-table-column label="新聞頻道" prop="newsChannel" width="100">
+        </el-table-column>
+        <el-table-column label="情緒指標" prop="sentiment" width="100">
         </el-table-column>
       </el-table>
     </div>
@@ -54,49 +62,26 @@
 export default {
   data() {
     return {
+      openSearchBox: true,
+      listQuery: {
+        UserId: 3,
+        TopicId: 16,
+        Page: 1,
+        PageSize: 10,
+      },
       projSort: "",
       projTheme: "",
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-      ],
+      tableData: [],
       multipleSelection: [],
     };
   },
   methods: {
+    getList() {
+      this.$api.getDataByTopicId(this.listQuery).then((res) => {
+        console.log(res.data);
+        this.tableData = res.data;
+      });
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -110,6 +95,9 @@ export default {
       this.multipleSelection = val;
     },
   },
+  mounted() {
+    this.getList();
+  },
 };
 </script>
 
@@ -117,9 +105,30 @@ export default {
 .projSearch {
   width: 100%;
   height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
 
   &__searchBox {
-    position: relative;
     padding: 20px;
     border-bottom: 1px solid #191972;
 
@@ -128,26 +137,6 @@ export default {
       color: #2a2a2a;
       letter-spacing: 2px;
       font-size: 18px;
-    }
-
-    &--setting {
-      position: absolute;
-      top: 0;
-      right: 0;
-      padding: 16px 8px;
-      background: #00abb9;
-      -webkit-writing-mode: vertical-lr;
-      writing-mode: vertical-lr;
-      transition: 0.6s;
-      cursor: pointer;
-
-      strong {
-        color: white;
-      }
-
-      &:hover {
-        background: #038bb4;
-      }
     }
 
     &--sort {
@@ -167,6 +156,8 @@ export default {
 
     &--joinAnalysis {
       width: 100%;
+      padding: 0 30px;
+      box-sizing: border-box;
       text-align: right;
 
       span {

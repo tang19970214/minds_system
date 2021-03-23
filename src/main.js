@@ -12,6 +12,7 @@ import api from "@/api/apis.js"
 Vue.config.productionTip = false
 Vue.use(ElementUI);
 Vue.use(VueAxios, axios)
+Vue.use(require('vue-moment'));
 Vue.prototype.$api = api
 
 new Vue({

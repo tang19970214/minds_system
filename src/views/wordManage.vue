@@ -1,30 +1,42 @@
 <template>
   <div class="wordManage">
-    <div class="wordManage__searchBox">
-      <div class="wordManage__searchBox--kindAndSort">
-        <div class="kind">
-          <label>維護詞庫類別：</label>
-          <el-date-picker v-model="wordKind" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
-          </el-date-picker>
-        </div>
-
-        <div class="sort">
-          <label>實體詞分類：</label>
-          <el-select v-model="wordSort" placeholder="請選擇查詢來源">
-            <el-option label="請選擇" value="">
-            </el-option>
-          </el-select>
-        </div>
-      </div>
-
-      <div class="wordManage__searchBox--searchStr">
-        <div class="keyword">
-          <label>關鍵字：</label>
-          <el-input v-model="searchKeyword"></el-input>
-        </div>
-        <el-button type="primary">查詢</el-button>
-      </div>
+    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
     </div>
+
+    <transition name="moveR">
+      <div class="wordManage__searchBox" v-if="openSearchBox">
+        <div class="wordManage__searchBox--kindAndSort">
+          <div class="kind">
+            <label>維護詞庫類別：</label>
+            <el-select v-model="wordClass" placeholder="請選擇詞庫類別">
+              <el-option label="請選擇" value=""></el-option>
+              <el-option label="監控詞" value="監控詞"></el-option>
+              <el-option label="過濾詞" value="過濾詞"></el-option>
+              <el-option label="實體詞" value="實體詞"></el-option>
+              <el-option label="同義詞" value="同義詞"></el-option>
+              <el-option label="新詞" value="新詞"></el-option>
+            </el-select>
+          </div>
+
+          <div class="sort">
+            <label>實體詞分類：</label>
+            <el-select v-model="wordSort" placeholder="請選擇實體詞分類">
+              <el-option label="請選擇" value="">
+              </el-option>
+            </el-select>
+          </div>
+        </div>
+
+        <div class="wordManage__searchBox--searchStr">
+          <div class="keyword">
+            <label>關鍵字：</label>
+            <el-input v-model="searchKeyword"></el-input>
+          </div>
+          <el-button type="primary">查詢</el-button>
+        </div>
+      </div>
+    </transition>
 
     <div class="wordManage__listBox">
       <div class="wordManage__listBox--add">
@@ -37,12 +49,20 @@
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55">
         </el-table-column>
-        <el-table-column label="日期" width="120">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
+        <el-table-column type="index" label="序號" width="60">
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120">
+        <el-table-column prop="keyWord" label="關鍵字" width="150">
         </el-table-column>
-        <el-table-column prop="address" label="地址" show-overflow-tooltip>
+        <el-table-column prop="tf" label="詞頻" width="60">
+        </el-table-column>
+        <el-table-column label="關聯關鍵字">
+          <template slot-scope="scope">
+            <div class="wordManage__listBox--tableKeyword" v-for="(item, index) in scope.row.rels" :key="index">
+              {{item}}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="" label="備註">
         </el-table-column>
       </el-table>
     </div>
@@ -53,49 +73,39 @@
 export default {
   data() {
     return {
+      openSearchBox: true,
+      listQuery: {
+        UserId: 3,
+        sDate: "2020-01-01",
+        eDate: "2021-12-31",
+        TopCount: 3,
+      },
+      wordClass: "",
       wordSort: "",
-      wordKind: "",
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-      ],
+      searchKeyword: "",
+      tableData: [],
       multipleSelection: [],
     };
   },
   methods: {
+    getKeyClass() {
+      const keyClassList = {
+        UserId: 3,
+        OrgId: 1,
+        Query: "",
+        sDate: "2020-01-01",
+        eDate: "2021-12-31",
+      };
+      this.$api.getTermList(keyClassList).then((res) => {
+        console.log(res.data);
+      });
+    },
+    getList() {
+      this.$api.getKeyWord(this.listQuery).then((res) => {
+        console.log(res.data);
+        this.tableData = res.data;
+      });
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -109,6 +119,10 @@ export default {
       this.multipleSelection = val;
     },
   },
+  mounted() {
+    this.getKeyClass();
+    this.getList();
+  },
 };
 </script>
 
@@ -116,6 +130,28 @@ export default {
 .wordManage {
   width: 100%;
   height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
 
   &__searchBox {
     width: 100%;
@@ -184,6 +220,8 @@ export default {
 
     &--add {
       width: 100%;
+      padding: 0 30px;
+      box-sizing: border-box;
       text-align: right;
 
       span {
@@ -201,6 +239,20 @@ export default {
 
         &:hover {
           letter-spacing: 2px;
+        }
+      }
+    }
+
+    &--tableKeyword {
+      display: inline;
+      align-items: center;
+      &::after {
+        content: "、";
+      }
+
+      &:last-child {
+        &::after {
+          content: "";
         }
       }
     }

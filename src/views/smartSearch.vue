@@ -1,27 +1,33 @@
 <template>
   <div class="smartSearchPage">
-    <div class="smartSearchPage__searchBox">
-      <div class="smartSearchPage__searchBox--dateAndFrom">
-        <div class="datetime">
-          <label>查詢日期：</label>
-          <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
-          </el-date-picker>
-        </div>
-
-        <div class="searchFrom">
-          <label>查詢來源：</label>
-          <el-select v-model="searchFrom" placeholder="請選擇查詢來源">
-            <el-option label="請選擇" value="">
-            </el-option>
-          </el-select>
-        </div>
-      </div>
-
-      <div class="smartSearchPage__searchBox--searchStr">
-        <el-input v-model="searchKeyword"></el-input>
-        <el-button type="primary">搜尋</el-button>
-      </div>
+    <div class="smartSearchPage__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
     </div>
+
+    <transition name="moveR">
+      <div class="smartSearchPage__searchBox" v-if="openSearchBox">
+        <div class="smartSearchPage__searchBox--dateAndFrom">
+          <div class="datetime">
+            <label>查詢日期：</label>
+            <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+            </el-date-picker>
+          </div>
+
+          <div class="searchFrom">
+            <label>查詢來源：</label>
+            <el-select v-model="searchFrom" placeholder="請選擇查詢來源">
+              <el-option label="請選擇" value="">
+              </el-option>
+            </el-select>
+          </div>
+        </div>
+
+        <div class="smartSearchPage__searchBox--searchStr">
+          <el-input v-model="searchKeyword"></el-input>
+          <el-button type="primary" @click="searchNews">搜尋</el-button>
+        </div>
+      </div>
+    </transition>
 
     <div class="smartSearchPage__listBox">
       <div class="smartSearchPage__listBox--joinAnalysis">
@@ -31,15 +37,21 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
+        <el-table-column type="selection" width="50">
         </el-table-column>
-        <el-table-column label="日期" width="120">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
+        <el-table-column label="序號" type="index" width="50">
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120">
+        <el-table-column label="新聞標題" prop="newsTitle">
         </el-table-column>
-        <el-table-column prop="address" label="地址" show-overflow-tooltip>
+        <el-table-column label="新聞時間" width="150">
+          <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
+        </el-table-column>
+        <el-table-column label="新聞網站" prop="newsUrl">
+        </el-table-column>
+        <el-table-column label="新聞頻道" prop="newsChannel" width="100">
+        </el-table-column>
+        <el-table-column label="情緒指標" prop="sentiment" width="100">
         </el-table-column>
       </el-table>
     </div>
@@ -47,53 +59,36 @@
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   data() {
     return {
+      listQuery: {
+        userId: 1,
+        sDate: "2021-01-01",
+        eDate: "2021-12-31",
+        query: "",
+        nSite: "全部",
+        nChannel: "全部",
+        page: 1,
+        pageSize: 10,
+      },
+      openSearchBox: true,
       dateRange: "",
       searchFrom: "",
       searchKeyword: "",
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-      ],
+      tableData: [],
       multipleSelection: [],
     };
   },
   methods: {
+    getList() {
+      this.$api.getNewsList(this.listQuery).then((res) => {
+        console.log(res);
+        this.tableData = res.data;
+      });
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -106,6 +101,36 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
+    searchNews() {
+      if (!this.dateRange && !this.searchFrom && !this.searchKeyword) {
+        this.listQuery = {
+          userId: 1,
+          sDate: "2021-01-01",
+          eDate: "2021-12-31",
+          query: "",
+          nSite: "全部",
+          nChannel: "全部",
+          page: 1,
+          pageSize: 10,
+        };
+        this.getList();
+      } else {
+        this.listQuery = {
+          userId: 1,
+          sDate: moment(this.dateRange[0]).format("YYYY-MM-DD"),
+          eDate: moment(this.dateRange[1]).format("YYYY-MM-DD"),
+          query: "",
+          nSite: "全部",
+          nChannel: "全部",
+          page: 1,
+          pageSize: 10,
+        };
+      }
+      this.getList();
+    },
+  },
+  mounted() {
+    this.getList();
   },
 };
 </script>
@@ -114,6 +139,28 @@ export default {
 .smartSearchPage {
   width: 100%;
   height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
 
   &__searchBox {
     width: 100%;
@@ -166,6 +213,8 @@ export default {
 
     &--joinAnalysis {
       width: 100%;
+      padding: 0 30px;
+      box-sizing: border-box;
       text-align: right;
 
       span {

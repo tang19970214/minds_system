@@ -1,26 +1,32 @@
 <template>
   <div class="backtrackAnalysis">
-    <div class="backtrackAnalysis__searchBox">
-      <div class="backtrackAnalysis__searchBox--datetime">
-        <label>分析日期：</label>
-        <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
-        </el-date-picker>
-      </div>
-
-      <div class="backtrackAnalysis__searchBox--fromAndBtn">
-        <div class="analysisFrom">
-          <label>分析來源：</label>
-          <el-select v-model="analysisFrom" placeholder="請選擇查詢來源">
-            <el-option label="請選擇" value="">
-            </el-option>
-          </el-select>
-        </div>
-
-        <div class="analysisBtn">
-          <el-button type="primary">分析</el-button>
-        </div>
-      </div>
+    <div class="backtrackAnalysis__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
     </div>
+
+    <transition name="moveR">
+      <div class="backtrackAnalysis__searchBox" v-if="openSearchBox">
+        <div class="backtrackAnalysis__searchBox--datetime">
+          <label>分析日期：</label>
+          <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+          </el-date-picker>
+        </div>
+
+        <div class="backtrackAnalysis__searchBox--fromAndBtn">
+          <div class="analysisFrom">
+            <label>分析來源：</label>
+            <el-select v-model="analysisFrom" placeholder="請選擇查詢來源">
+              <el-option label="請選擇" value="">
+              </el-option>
+            </el-select>
+          </div>
+
+          <div class="analysisBtn">
+            <el-button type="primary">分析</el-button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <div class="backtrackAnalysis__listBox">
       <div class="backtrackAnalysis__listBox--title">
@@ -46,6 +52,7 @@
 export default {
   data() {
     return {
+      openSearchBox: true,
       dateRange: "",
       analysisFrom: "",
       tableData: [
@@ -109,6 +116,28 @@ export default {
 .backtrackAnalysis {
   width: 100%;
   height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
 
   &__searchBox {
     width: 100%;

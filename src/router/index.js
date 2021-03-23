@@ -84,6 +84,16 @@ const routes = [
     meta: {
       hideMenu: false
     }
+  },
+
+  /* 專卷編輯 */
+  {
+    path: '/projEdit',
+    name: 'projEdit',
+    component: () => import('../views/proj/projEdit.vue'),
+    meta: {
+      hideMenu: true
+    }
   }
 ]
 

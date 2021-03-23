@@ -67,6 +67,9 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
+        // this.$api.logout({
+        //   userId: JSON.parse(window.localStorage.getItem("userInfo")).comId,
+        // });
         this.$message({
           type: "success",
           message: "您已成功登出!",

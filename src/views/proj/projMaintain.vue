@@ -1,28 +1,36 @@
 <template>
   <div class="projMaintain">
-    <div class="projMaintain__searchBox">
-      <div class="projMaintain__searchBox--sort">
-        <label>專卷分類：</label>
-        <el-select v-model="projSort" placeholder="請選擇專卷分類">
-          <el-option label="請選擇" value="">
-          </el-option>
-        </el-select>
-        <i class="el-icon-edit"></i>
-        <i class="el-icon-plus"></i>
-        <i class="el-icon-delete-solid"></i>
-      </div>
-
-      <div class="projMaintain__searchBox--theme">
-        <label>專卷主題：</label>
-        <el-select v-model="projTheme" placeholder="請選擇專卷主題">
-          <el-option label="請選擇" value="">
-          </el-option>
-        </el-select>
-        <i class="el-icon-edit"></i>
-        <i class="el-icon-plus"></i>
-        <i class="el-icon-delete-solid"></i>
-      </div>
+    <div class="projMaintain__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
     </div>
+
+    <transition name="moveR">
+      <div class="projMaintain__searchBox" v-if="openSearchBox">
+        <!-- 專卷分類 -->
+        <div class="projMaintain__searchBox--sort">
+          <label>專卷分類：</label>
+          <el-select v-model="projSort" placeholder="請選擇專卷分類">
+            <el-option label="請選擇" value="">
+            </el-option>
+          </el-select>
+          <i class="el-icon-edit" @click="openProjSortModal('edit')"></i>
+          <i class="el-icon-plus" @click="openProjSortModal('add')"></i>
+          <i class="el-icon-delete-solid" @click="openProjSortModal('del')"></i>
+        </div>
+
+        <!-- 專卷主題 -->
+        <div class="projMaintain__searchBox--theme">
+          <label>專卷主題：</label>
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題">
+            <el-option label="請選擇" value="">
+            </el-option>
+          </el-select>
+          <i class="el-icon-edit" @click="openProjThemeModal('edit')"></i>
+          <i class="el-icon-plus" @click="openProjThemeModal('add')"></i>
+          <i class="el-icon-delete-solid" @click="openProjThemeModal('del')"></i>
+        </div>
+      </div>
+    </transition>
 
     <div class="projMaintain__listBox">
       <el-row>
@@ -43,18 +51,59 @@
         </el-col>
       </el-row>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
+        <el-table-column type="selection" width="50">
         </el-table-column>
-        <el-table-column label="日期" width="120">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
+        <el-table-column label="序號" type="index" width="50">
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120">
+        <el-table-column label="建立人" prop="newsTitle" width="100">
         </el-table-column>
-        <el-table-column prop="address" label="地址" show-overflow-tooltip>
+        <el-table-column label="建立時間" width="200">
+          <template slot-scope="scope">{{ scope.row.createdTime | moment("YYYY-MM-DD HH:mm") }}</template>
+        </el-table-column>
+        <el-table-column label="專卷內容標題" prop="title">
+        </el-table-column>
+        <el-table-column label="備註" prop="remark">
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- modal -->
+    <!-- 專卷分類 -->
+    <el-dialog :title="projSortModalTitle + '專卷分類'" :visible.sync="projSortModal" width="60%" center>
+      <el-form :model="projSortList" :rules="rules_projSortModal" ref="ruleForm_projSortModal" label-width="150px">
+        <el-form-item label="專卷名稱" prop="name">
+          <el-input v-model="projSortList.name"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="addProjSort" v-if="projSortModalTitle == '新增'">儲存</el-button>
+        <el-button type="primary" @click="editProjSort" v-else>修改</el-button>
+        <el-button type="danger" @click="projSortModal = false">取消</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 專卷主題 -->
+    <el-dialog :title="projThemeModalTitle + '專卷主題'" :visible.sync="projThemeModal" width="60%" center>
+      <el-form :model="projThemeList" :rules="rules_projThemeModal" ref="ruleForm_projThemeModal" label-width="150px">
+        <el-form-item label="專卷分類">
+          <el-input v-model="projThemeList.sort"></el-input>
+        </el-form-item>
+        <el-form-item label="專卷主題" prop="theme">
+          <el-input v-model="projThemeList.theme"></el-input>
+        </el-form-item>
+        <el-form-item label="備註" prop="remark">
+          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 4}" v-model="projThemeList.remark"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="addProjTheme" v-if="projThemeModalTitle == '新增'">儲存</el-button>
+        <el-button type="primary" @click="editProjTheme" v-else>修改</el-button>
+        <el-button type="danger" @click="projThemeModal = false">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -62,49 +111,53 @@
 export default {
   data() {
     return {
+      openSearchBox: true,
+      listQuery: {
+        UserId: 3,
+        TopicId: 16,
+        Page: 1,
+        PageSize: 10,
+      },
+      /* 專卷分類 */
       projSort: "",
+      projSortModal: false,
+      projSortModalTitle: "",
+      projSortList: {
+        name: "",
+      },
+      rules_projSortModal: {
+        name: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
+      /* 專卷主題 */
       projTheme: "",
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-      ],
+      projThemeModal: false,
+      projThemeModalTitle: "",
+      projThemeList: {
+        sort: "",
+        theme: "",
+        remark: "",
+      },
+      rules_projThemeModal: {
+        theme: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        remark: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
+
+      tableData: [],
       multipleSelection: [],
     };
   },
   methods: {
+    getProjSort() {
+      const sortList = {};
+      this.$api.getUserTopic().then((res) => {
+        console.log(res);
+      });
+    },
+    getList() {
+      this.$api.getDataByTopicId(this.listQuery).then((res) => {
+        this.tableData = res.data;
+      });
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -117,6 +170,131 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
+    // 專卷分類
+    openProjSortModal(val) {
+      switch (val) {
+        case "edit":
+          if (!!this.projSort) {
+            this.projSortModalTitle = "編輯";
+            this.projSortModal = true;
+          } else {
+            this.$message({
+              message: "請先選擇欲修改之專卷分類！",
+              type: "warning",
+            });
+          }
+          break;
+        case "add":
+          this.projSortModalTitle = "新增";
+          this.projSortModal = true;
+          break;
+        case "del":
+          if (!!this.projSort) {
+            this.$confirm("確定要刪除此專卷分類嗎？", "提示", {
+              confirmButtonText: "確定",
+              cancelButtonText: "取消",
+              type: "warning",
+            })
+              .then(() => {
+                this.delProjSort();
+              })
+              .catch(() => {});
+          } else {
+            this.$message({
+              message: "請先選擇欲修改之專卷分類！",
+              type: "warning",
+            });
+          }
+          break;
+      }
+    },
+    async addProjSort() {
+      const addList = {
+        OrgId: 2,
+        UserId: 3,
+        Name: this.projSortList.name,
+        Action: "http://localhost/aaa",
+        Memo: "測試",
+        SortOrder: 1,
+        Pid: null,
+        isShare: 0,
+        isActive: 1,
+      };
+      await this.$api.addUserTopic(addList);
+      this.projSortModal = false;
+      this.$message({
+        message: "新增成功！",
+        type: "success",
+      });
+    },
+    async editProjSort() {
+      const editList = {
+        Id: 11,
+        OrgId: 2,
+        UserId: 3,
+        Name: this.projSortList.name,
+        Action: "http://localhost/aaa",
+        Memo: "測試1",
+        SortOrder: 1,
+        Pid: null,
+        isShare: 0,
+        isActive: 1,
+      };
+      await this.$api.updateUserTopic(editList).then((res) => {
+        console.log(res);
+      });
+    },
+    delProjSort() {
+      const delList = {
+        UserId: 2,
+        Ids: [11, 12],
+      };
+    },
+    // 專卷主題
+    openProjThemeModal(val) {
+      switch (val) {
+        case "edit":
+          if (!!this.projTheme) {
+            this.projThemeModalTitle = "編輯";
+            this.projThemeModal = true;
+          } else {
+            this.$message({
+              message: "請先選擇欲修改之專卷主題！",
+              type: "warning",
+            });
+          }
+          break;
+        case "add":
+          this.projThemeModalTitle = "新增";
+          this.projThemeModal = true;
+          break;
+        case "del":
+          if (!!this.projTheme) {
+            this.$confirm("確定要刪除此專卷主題嗎？", "提示", {
+              confirmButtonText: "確定",
+              cancelButtonText: "取消",
+              type: "warning",
+            })
+              .then(() => {
+                this.delProjTheme();
+              })
+              .catch(() => {});
+          } else {
+            this.$message({
+              message: "請先選擇欲修改之專卷主題！",
+              type: "warning",
+            });
+          }
+          break;
+      }
+    },
+    editProjTheme() {},
+    addProjTheme() {},
+    delProjTheme() {},
+  },
+  mounted() {
+    this.getList();
+    // this.getProjSort();
   },
 };
 </script>
@@ -125,6 +303,28 @@ export default {
 .projMaintain {
   width: 100%;
   height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
 
   &__searchBox {
     width: 100%;
@@ -191,6 +391,8 @@ export default {
 
     &--joinAnalysis {
       width: 100%;
+      padding: 0 30px;
+      box-sizing: border-box;
       text-align: right;
 
       span {
