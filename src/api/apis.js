@@ -54,8 +54,12 @@ const api = {
 
   // 詞庫維護
   /* 獲取 */
-  getTermList(data) {
-    return req("post", "TermInfo/getTermInfoList", data);
+  // getTermList(data) {
+  //   return req("post", "TermInfo/getTermInfoList", data);
+  // },
+  /* 獲取詞庫類別 */
+  getTermTypeList(data) {
+    return req("post", "TermType/getTermTypeList", data);
   },
   /* 新增 */
   addTermInfo(data) {

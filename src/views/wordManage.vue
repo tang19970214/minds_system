@@ -11,11 +11,7 @@
             <label>維護詞庫類別：</label>
             <el-select v-model="wordClass" placeholder="請選擇詞庫類別">
               <el-option label="請選擇" value=""></el-option>
-              <el-option label="監控詞" value="監控詞"></el-option>
-              <el-option label="過濾詞" value="過濾詞"></el-option>
-              <el-option label="實體詞" value="實體詞"></el-option>
-              <el-option label="同義詞" value="同義詞"></el-option>
-              <el-option label="新詞" value="新詞"></el-option>
+              <el-option :label="item.termName" :value="item.termName" v-for="item in wordClassList" :key="item.id"></el-option>
             </el-select>
           </div>
 
@@ -81,6 +77,7 @@ export default {
         TopCount: 3,
       },
       wordClass: "",
+      wordClassList: [],
       wordSort: "",
       searchKeyword: "",
       tableData: [],
@@ -90,14 +87,14 @@ export default {
   methods: {
     getKeyClass() {
       const keyClassList = {
-        UserId: 3,
-        OrgId: 1,
-        Query: "",
-        sDate: "2020-01-01",
-        eDate: "2021-12-31",
+        // UserId: 3,
+        // OrgId: 1,
+        // Query: "",
+        // sDate: "2020-01-01",
+        // eDate: "2021-12-31",
       };
-      this.$api.getTermList(keyClassList).then((res) => {
-        console.log(res.data);
+      this.$api.getTermTypeList(keyClassList).then((res) => {
+        this.wordClassList = res.data;
       });
     },
     getList() {

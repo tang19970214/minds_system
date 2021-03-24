@@ -31,7 +31,7 @@
           <a>匯出</a>
         </span>
 
-        <span>
+        <span @click="openRelationAnalysis()">
           <i class="el-icon-circle-plus-outline"></i>
           <a>關聯分析</a>
         </span>
@@ -81,6 +81,10 @@ export default {
         console.log(res.data);
         this.tableData = res.data;
       });
+    },
+    openRelationAnalysis() {
+      let routeUrl = this.$router.resolve({ name: "relationAnalysis" });
+      window.open(routeUrl.href, "_blank");
     },
     toggleSelection(rows) {
       if (rows) {

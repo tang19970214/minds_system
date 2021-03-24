@@ -71,3 +71,34 @@ body {
 .moveR-leave-to {
     transform: translateX(100%);
 }
+
+.moveL-enter-active,
+.moveL-leave-active {
+    transition: all 0.4s linear;
+    transform: translateX(0);
+}
+
+.moveL-enter,
+.moveL-leave {
+    transform: translateX(-100%);
+}
+
+.moveL-leave-to {
+    transform: translateX(-100%);
+}
+
+.el-button {
+    &--primary {
+        background-color: $mainColor !important;
+        border-color: $mainColor !important;
+    }
+
+    &--info {
+        background-color: $supColor !important;
+        border-color: $supColor !important;
+    }
+
+    &:hover {
+        opacity: .8 !important;
+    }
+}

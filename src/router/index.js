@@ -94,6 +94,15 @@ const routes = [
     meta: {
       hideMenu: true
     }
+  },
+  /* 關聯分析 */
+  {
+    path: '/relationAnalysis',
+    name: 'relationAnalysis',
+    component: () => import('../views/relationAnalysis.vue'),
+    meta: {
+      hideMenu: true
+    }
   }
 ]
 
