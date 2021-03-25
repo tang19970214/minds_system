@@ -1,5 +1,5 @@
 <template>
-  <div id="sideBar">
+  <div id="sideBar" :class="{'shrinkBar': isCollapse}">
     <template>
       <!-- 有子層 -->
       <el-submenu v-if="item.children.length > 0" :index="item.path" :key="item.id">
@@ -28,10 +28,10 @@
       <!-- 無子層 -->
       <template v-else>
         <el-menu-item v-if="item.name !== '登出'" :index="item.path" :key="item.id">
-          <!-- <i :class="item.icon"></i> -->
+          <i :class="item.icon"></i>
           <!-- <i class="el-icon-search"></i> -->
           <template slot="title">
-            <i :class="item.icon"></i>
+            <!-- <i :class="item.icon"></i> -->
             <span class="title-name" slot="title">{{ item.name }}</span>
           </template>
         </el-menu-item>
@@ -67,16 +67,38 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
-        // this.$api.logout({
-        //   userId: JSON.parse(window.localStorage.getItem("userInfo")).comId,
-        // });
-        this.$message({
-          type: "success",
-          message: "您已成功登出!",
-        });
-        this.$router.push({ name: "login" });
+        this.$api
+          .logout({
+            userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+          })
+          .then((res) => {
+            if (res.data) {
+              window.localStorage.removeItem("userInfo");
+              window.localStorage.removeItem("menu");
+              this.$message({
+                type: "success",
+                message: "您已成功登出!",
+              });
+              this.$router.push({ name: "login" });
+            }
+          });
       });
     },
   },
 };
 </script>
+
+<style lang="scss">
+#sideBar {
+  &.shrinkBar {
+    li,
+    .el-tooltip {
+      padding: 0 !important;
+      text-align: center !important;
+      i {
+        margin-right: 0 !important;
+      }
+    }
+  }
+}
+</style>

@@ -9,7 +9,7 @@
         <!-- 專卷分類 -->
         <div class="projMaintain__searchBox--sort">
           <label>專卷分類：</label>
-          <el-select v-model="projSort" placeholder="請選擇專卷分類">
+          <el-select v-model="projSort" placeholder="請選擇專卷分類" no-data-text="無數據" @change="clearTheme">
             <el-option label="請選擇" value=""></el-option>
             <el-option :label="item.name" :value="item.name" v-for="item in sortList" :key="item.id"></el-option>
           </el-select>
@@ -21,10 +21,10 @@
         <!-- 專卷主題 -->
         <div class="projMaintain__searchBox--theme">
           <label>專卷主題：</label>
-          <el-select v-model="projTheme" placeholder="請選擇專卷主題" :disabled="!projSort" v-if="getChild(themeList).length > 0">
-            <!-- <el-option label="請選擇" value=""></el-option> -->
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題" v-if="getChild(themeList).length > 0" no-data-text="無數據" @change="getThemeItem">
             <el-option :label="item.name" :value="item.name" v-for="item in getChild(themeList)[0].children" :key="item.id"></el-option>
           </el-select>
+          <el-select v-model="projTheme" placeholder="請先選擇專卷分類" :disabled="!projSort" v-else></el-select>
           <i class="el-icon-edit" @click="openProjThemeModal('edit')"></i>
           <i class="el-icon-plus" @click="openProjThemeModal('add')"></i>
           <i class="el-icon-delete-solid" @click="openProjThemeModal('del')"></i>
@@ -36,9 +36,9 @@
       <el-row>
         <el-col :span="16">
           <div class="projMaintain__listBox--info">
-            <strong>備註：配合政策發展</strong>
-            <strong>建立人：Peter</strong>
-            <strong>建立時間：2021/01/20 01:24:00</strong>
+            <strong>備註：{{projThemeInfo.memo}}</strong>
+            <strong>建立人：{{getCreateUser(projThemeInfo.userId)}}</strong>
+            <strong>建立時間：{{projThemeInfo.createdTime | moment("YYYY-MM-DD HH:mm:ss")}}</strong>
           </div>
         </el-col>
         <el-col :span="8">
@@ -111,9 +111,10 @@
 export default {
   data() {
     return {
+      allUserList: [],
       openSearchBox: true,
       listQuery: {
-        UserId: 3,
+        UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
         TopicId: 16,
         Page: 1,
         PageSize: 10,
@@ -145,6 +146,8 @@ export default {
         theme: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
         remark: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
       },
+      /* 專卷主題資訊 */
+      projThemeInfo: {},
     };
   },
   computed: {
@@ -155,20 +158,40 @@ export default {
         return getChildItem;
       };
     },
+    getCreateUser() {
+      return (id) => {
+        const userInfo = this.allUserList.filter((res) => res.id == id)[0];
+        return userInfo?.name;
+      };
+    },
   },
   methods: {
+    /* 獲取comId下所有使用者(用於篩選建立人ID) */
+    getUser() {
+      this.$api
+        .getUserList({
+          ComId: JSON.parse(window.localStorage.getItem("userInfo")).comId,
+        })
+        .then((res) => {
+          this.allUserList = res.data;
+        });
+    },
     /* 獲取專卷資料 */
     getProjSort() {
-      this.$api.getUserTopic({ UserId: 3 }).then((res) => {
-        this.sortList = res.data.filter((resp) => resp.pid == null);
-        const childrenList = res.data.filter((sup) => sup.pid !== null);
-        this.themeList = this.sortList.map((p) => {
-          p.children = childrenList.filter((c) => {
-            return c.pid === p.id;
+      this.$api
+        .getUserTopic({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+        })
+        .then((res) => {
+          this.sortList = res.data.filter((resp) => resp.pid == null);
+          const childrenList = res.data.filter((sup) => sup.pid !== null);
+          this.themeList = this.sortList.map((p) => {
+            p.children = childrenList.filter((c) => {
+              return c.pid === p.id;
+            });
+            return p;
           });
-          return p;
         });
-      });
     },
     /* 獲取表格資料 */
     getList() {
@@ -176,6 +199,8 @@ export default {
         this.tableData = res.data;
       });
     },
+
+    /* ============================================ */
     // 專卷分類
     openProjSortModal(val) {
       switch (val) {
@@ -183,6 +208,7 @@ export default {
           if (!!this.projSort) {
             this.projSortModalTitle = "編輯";
             this.projSortModal = true;
+            this.projSortList.name = this.projSort;
           } else {
             this.$message({
               message: "請先選擇欲修改之專卷分類！",
@@ -218,70 +244,85 @@ export default {
           break;
       }
     },
-    /* 新增專卷分類 */
-    async addProjSort() {
-      const addList = {
-        OrgId: 2,
-        UserId: 3,
-        Name: this.projSortList.name,
-        Action: "http://localhost/aaa",
-        Memo: "測試",
-        SortOrder: 1,
-        Pid: null,
-        isShare: 0,
-        isActive: 1,
-      };
-      await this.$api.addUserTopic(addList);
-      this.projSortModal = false;
-      this.projSort = "";
-      this.getProjSort();
-      this.$message({
-        message: "新增成功！",
-        type: "success",
-      });
-    },
-    /* 編輯專卷分類 */
-    async editProjSort() {
-      const getData = this.sortList.filter(
-        (res) => res.name == this.projSort
-      )[0];
-      const editList = {
-        Id: getData.id,
-        OrgId: getData.orgId,
-        UserId: getData.userId,
-        Name: this.projSortList.name,
-        Action: getData.action,
-        Memo: getData.memo,
-        SortOrder: getData.sortOrder,
-        Pid: getData.pid,
-        isShare: getData.isShare,
-        isActive: getData.isActive,
-      };
-      await this.$api.updateUserTopic(editList).then((res) => {
-        if (res.data) {
-          this.$message({
-            message: "修改成功！",
-            type: "success",
+    /* 新增-專卷分類 */
+    addProjSort() {
+      this.$refs.ruleForm_projSortModal.validate((valid) => {
+        if (valid) {
+          const addList = {
+            OrgId: 2,
+            UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+            Name: this.projSortList.name,
+            Action: "",
+            Memo: "",
+            SortOrder: 1,
+            Pid: null,
+            isShare: 0,
+            isActive: 1,
+          };
+          this.$api.addUserTopic(addList).then((res) => {
+            this.projSortModal = false;
+            this.projSort = "";
+            this.getProjSort();
+            this.$message({
+              message: "新增成功！",
+              type: "success",
+            });
           });
-          this.projSortModal = false;
-          this.projSort = "";
-          this.getProjSort();
         }
       });
     },
-    /* 刪除專卷分類 */
+    /* 編輯-專卷分類 */
+    editProjSort() {
+      this.$refs.ruleForm_projSortModal.validate((valid) => {
+        if (valid) {
+          const getData = this.sortList.filter(
+            (res) => res.name == this.projSort
+          )[0];
+          const editList = {
+            Id: getData.id,
+            OrgId: getData.orgId,
+            UserId: getData.userId,
+            Name: this.projSortList.name,
+            Action: getData.action,
+            Memo: getData.memo,
+            SortOrder: getData.sortOrder,
+            Pid: getData.pid,
+            isShare: getData.isShare,
+            isActive: getData.isActive,
+          };
+          this.$api.updateUserTopic(editList).then((res) => {
+            if (res.data) {
+              this.$message({
+                message: "修改成功！",
+                type: "success",
+              });
+              this.projSortModal = false;
+              this.projSort = "";
+              this.getProjSort();
+            }
+          });
+        }
+      });
+    },
+    /* 刪除-專卷分類 */
     async delProjSort() {
       const getData = this.sortList.filter(
         (res) => res.name == this.projSort
       )[0];
+      const getID = [getData.id];
+      if (getData.children.length > 0) {
+        getData.children.map((res) => {
+          getID.push(res.id);
+        });
+      }
       const delList = {
         UserId: getData.userId,
-        Ids: [getData.id],
+        Ids: [getID],
       };
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
           this.$message({
-            message: "修改成功！",
+            message: "已成功刪除！",
             type: "success",
           });
           this.projSort = "";
@@ -289,6 +330,7 @@ export default {
         }
       });
     },
+    /* ---------------------------------- */
     // 專卷主題
     openProjThemeModal(val) {
       switch (val) {
@@ -296,6 +338,17 @@ export default {
           if (!!this.projTheme) {
             this.projThemeModalTitle = "編輯";
             this.projThemeModal = true;
+            // 撈取子層資料帶入modal輸入框
+            const getFather = this.sortList.filter(
+              (res) => res.name == this.projSort
+            )[0];
+            const getChild = getFather.children.filter(
+              (resp) => resp.name == this.projTheme
+            )[0];
+            this.projThemeList = {
+              theme: getChild.name,
+              remark: getChild.memo,
+            };
           } else {
             this.$message({
               message: "請先選擇欲修改之專卷主題！",
@@ -304,58 +357,152 @@ export default {
           }
           break;
         case "add":
-          this.projThemeModalTitle = "新增";
-          this.projThemeModal = true;
+          if (!!this.projSort) {
+            this.projThemeList = {};
+            this.projThemeModalTitle = "新增";
+            this.projThemeModal = true;
+          } else {
+            this.$message({
+              message: "請先選擇專卷分類！",
+              type: "warning",
+            });
+          }
           break;
         case "del":
           if (!!this.projTheme) {
-            this.$confirm("確定要刪除此專卷主題嗎？", "提示", {
-              confirmButtonText: "確定",
-              cancelButtonText: "取消",
-              type: "warning",
-            })
+            this.$confirm(
+              "確定要刪除專卷主題：『" + this.projTheme + "』嗎？",
+              "提示",
+              {
+                confirmButtonText: "確定",
+                cancelButtonText: "取消",
+                type: "warning",
+              }
+            )
               .then(() => {
                 this.delProjTheme();
               })
               .catch(() => {});
           } else {
             this.$message({
-              message: "請先選擇欲修改之專卷主題！",
+              message: "請先選擇欲刪除之專卷主題！",
               type: "warning",
             });
           }
           break;
       }
     },
-    /* 新增專卷主題 */
-    async addProjTheme() {
-      const getData = this.sortList.filter(
-        (res) => res.name == this.projSort
-      )[0];
-      const addList = {
-        OrgId: getData.orgId,
-        UserId: getData.userId,
-        Name: this.projThemeList.theme,
-        Action: getData.action,
-        Memo: this.projThemeList.remark,
-        SortOrder: getData.sortOrder,
-        Pid: getData.id,
-        isShare: getData.isShare,
-        isActive: getData.isActive,
-      };
-      await this.$api.addUserTopic(addList);
-      this.projThemeModal = false;
-      this.projTheme = "";
-      this.getProjSort();
-      this.$message({
-        message: "新增成功！",
-        type: "success",
+    /* 新增-專卷主題 */
+    addProjTheme() {
+      this.$refs.ruleForm_projThemeModal.validate((valid) => {
+        if (valid) {
+          const getData = this.sortList.filter(
+            (res) => res.name == this.projSort
+          )[0];
+          const addList = {
+            OrgId: getData.orgId,
+            UserId: getData.userId,
+            Name: this.projThemeList.theme,
+            Action: getData.action,
+            Memo: this.projThemeList.remark,
+            SortOrder: getData.sortOrder,
+            Pid: getData.id,
+            isShare: getData.isShare,
+            isActive: getData.isActive,
+          };
+          this.$api.addUserTopic(addList).then((res) => {
+            if (res.data) {
+              this.projThemeModal = false;
+              this.projTheme = "";
+              this.getProjSort();
+              this.$message({
+                message: "新增成功！",
+                type: "success",
+              });
+            }
+          });
+        }
       });
     },
-    /* 編輯專卷主題 */
-    editProjTheme() {},
-    /* 刪除專卷主題 */
-    delProjTheme() {},
+    /* 編輯-專卷主題 */
+    editProjTheme() {
+      this.$refs.ruleForm_projThemeModal.validate((valid) => {
+        if (valid) {
+          // 撈取子層資料帶入modal輸入框
+          const getFather = this.sortList.filter(
+            (res) => res.name == this.projSort
+          )[0];
+          const getChild = getFather.children.filter(
+            (resp) => resp.name == this.projTheme
+          )[0];
+          const editList = {
+            Id: getChild.id,
+            OrgId: getChild.orgId,
+            UserId: getChild.userId,
+            Name: this.projThemeList.theme,
+            Action: getChild.action,
+            Memo: this.projThemeList.remark,
+            SortOrder: getChild.sortOrder,
+            Pid: getChild.pid,
+            isShare: getChild.isShare,
+            isActive: getChild.isActive,
+          };
+          this.$api.updateUserTopic(editList).then((res) => {
+            if (res.data) {
+              this.projThemeModal = false;
+              this.projTheme = "";
+              this.getProjSort();
+              this.$message({
+                message: "修改成功！",
+                type: "success",
+              });
+            }
+          });
+        }
+      });
+    },
+    /* 刪除-專卷主題 */
+    async delProjTheme() {
+      // 撈取子層資料帶入modal輸入框
+      const getFather = this.sortList.filter(
+        (res) => res.name == this.projSort
+      )[0];
+      const getChild = getFather.children.filter(
+        (resp) => resp.name == this.projTheme
+      )[0];
+      const delList = {
+        UserId: getChild.userId,
+        Ids: [getChild.id],
+      };
+      await this.$api.deleteUserTopic(delList).then((res) => {
+        if (res.data) {
+          this.$message({
+            message: "修改成功！",
+            type: "success",
+          });
+          this.projTheme = "";
+          this.getProjSort();
+        }
+      });
+    },
+    /* =========================================== */
+
+    // 清除專卷主題選項
+    clearTheme() {
+      this.projTheme = "";
+      this.projThemeInfo = {};
+    },
+    // 獲取所選專卷主題之資料
+    getThemeItem(val) {
+      // 撈取子層資料帶入modal輸入框
+      const getFather = this.sortList.filter(
+        (res) => res.name == this.projSort
+      )[0];
+      this.projThemeInfo = getFather.children.filter(
+        (resp) => resp.name == this.projTheme
+      )[0];
+    },
+
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -370,6 +517,7 @@ export default {
     },
   },
   mounted() {
+    this.getUser();
     this.getProjSort();
     this.getList();
   },

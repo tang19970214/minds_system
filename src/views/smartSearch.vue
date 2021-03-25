@@ -15,7 +15,7 @@
 
           <div class="searchFrom">
             <label>查詢來源：</label>
-            <el-select v-model="searchFrom" placeholder="請選擇查詢來源">
+            <el-select v-model="searchFrom" placeholder="請選擇查詢來源" no-data-text="無數據">
               <el-option label="請選擇" value="">
               </el-option>
             </el-select>

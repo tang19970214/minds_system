@@ -12,7 +12,7 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="index" label="序號" width="50">
         </el-table-column>
         <el-table-column prop="name" label="使用者名稱">

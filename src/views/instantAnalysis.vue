@@ -46,7 +46,7 @@ export default {
     return {
       activeName: "",
       listQuery: {
-        UserId: 3,
+        UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
         content: "XXXYYYaAADDREFADF",
       },
     };

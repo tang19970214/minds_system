@@ -6,7 +6,7 @@
         <div class="body" v-if="openLeftBox">
           <div class="body__projSort">
             <strong>專卷分類：</strong>
-            <el-select v-model="searchSort" placeholder="請選擇">
+            <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
               <el-option label="請選擇" value=""></el-option>
               <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
             </el-select>
@@ -21,9 +21,8 @@
               <a>新增主題</a>
             </span>
           </div>
-
           <div class="body__projTheme">
-            <el-table :data="tableData" style="width: 100%" border>
+            <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" style="width: 100%" border empty-text="暫無數據">
               <el-table-column prop="id" label="序號" width="60px"></el-table-column>
               <el-table-column prop="name" label="專卷主題"></el-table-column>
             </el-table>
@@ -42,13 +41,15 @@
         <el-row>
           <el-col :span="12">
             <strong>專卷分類：</strong>
-            <p>{{searchSort}}</p>
+            <p>{{rightBoxData.projSort}}</p>
           </el-col>
           <el-col :span="12">
             <strong>備註：</strong>
+            <p>{{rightBoxData.remark}}</p>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="24">
             <strong>專卷主題：</strong>
+            <p class="childrenItem" v-for="(item, idx) in rightBoxData.projTheme" :key="idx">{{item}}</p>
           </el-col>
         </el-row>
       </div>
@@ -117,7 +118,7 @@
           </el-col>
           <el-col :span="12">
             <strong>搜尋來源：</strong>
-            <el-select v-model="searchRelation.searchFrom" placeholder="請選擇">
+            <el-select v-model="searchRelation.searchFrom" placeholder="請選擇" no-data-text="無數據">
               <el-option label="選項待補" value=""></el-option>
             </el-select>
           </el-col>
@@ -129,7 +130,7 @@
       </div>
 
       <div class="searchRelationModal__listBox">
-        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" border>
+        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" border empty-text="暫無數據">
           <el-table-column type="selection" width="50"></el-table-column>
           <el-table-column label="新聞標題" prop="newsTitle">
           </el-table-column>
@@ -160,7 +161,9 @@ export default {
       openLeftBox: true,
       searchSort: "",
       projSortList: [],
+      projThemeList: [],
       tableData: [],
+      rightBoxData: {},
       //   專卷分類modal
       openAddProjSort: false,
       addProjSort: {
@@ -201,13 +204,30 @@ export default {
         rightBox: this.openLeftBox ? "" : "width: 98.5%",
       };
     },
+    getChild() {
+      return (data) => {
+        const getChildItem =
+          data.filter((res) => res.name == this.searchSort) || [];
+        return getChildItem;
+      };
+    },
   },
   methods: {
     getProjSortList() {
-      this.$api.getUserTopic({ UserId: 3 }).then((res) => {
-        this.projSortList = res.data;
-        this.tableData = res.data;
-      });
+      this.$api
+        .getUserTopic({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+        })
+        .then((res) => {
+          this.projSortList = res.data.filter((resp) => resp.pid == null);
+          const childrenList = res.data.filter((sup) => sup.pid !== null);
+          this.projThemeList = this.projSortList.map((p) => {
+            p.children = childrenList.filter((c) => {
+              return c.pid === p.id;
+            });
+            return p;
+          });
+        });
     },
     async getRelationList() {
       const listQuery = {
@@ -224,7 +244,6 @@ export default {
             label: element.newsId.toString(),
           });
         });
-        console.log(newData);
         this.relationList = newData;
       });
     },
@@ -240,10 +259,28 @@ export default {
         pageSize: 10,
       };
       this.$api.getNewsList(newsListQuery).then((res) => {
-        console.log(res);
         this.tableData = res.data;
       });
     },
+    getProjData(val) {
+      if (!!val) {
+        const getFather = this.projThemeList.filter(
+          (res) => res.name == val
+        )[0];
+        let childData = [];
+        getFather.children.forEach((element) => {
+          childData.push(element.name);
+        });
+        this.rightBoxData = {
+          projSort: getFather?.name,
+          remark: getFather?.memo,
+          projTheme: childData,
+        };
+      } else {
+        this.rightBoxData = {};
+      }
+    },
+
     addSort() {
       this.$refs.ruleForm_addProjSort.validate((valid) => {
         if (valid) {
@@ -284,25 +321,30 @@ export default {
     addTheme() {
       this.$refs.ruleForm_addProjTheme.validate((valid) => {
         if (valid) {
+          const getData = this.projSortList.filter(
+            (res) => res.name == this.searchSort
+          )[0];
           const sortQuery = {
-            OrgId: 2,
-            UserId: 3,
-            Name: this.addProjSort.name,
-            Action: "http://localhost/aaa",
+            OrgId: getData.orgId,
+            UserId: getData.userId,
+            Name: this.addProjTheme.name,
+            Action: "",
             Memo: this.addProjTheme.remark,
-            SortOrder: 1,
-            Pid: null,
-            isShare: 0,
-            isActive: 1,
+            SortOrder: getData.sortOrder,
+            Pid: getData.id,
+            isShare: getData.isShare,
+            isActive: getData.isActive,
           };
           this.$api.addUserTopic(sortQuery).then((res) => {
             if (res.data) {
+              this.getProjSortList();
+              this.searchSort = "";
+              this.rightBoxData = {};
+              this.openAddProjTheme = false;
               this.$message({
                 message: "新增成功！",
                 type: "success",
               });
-              this.getProjSortList();
-              this.openAddProjTheme = false;
             }
           });
         }
@@ -433,6 +475,17 @@ export default {
       padding: 16px;
       box-sizing: border-box;
       border-bottom: 1px solid black;
+
+      .childrenItem {
+        &::after {
+          content: "、";
+        }
+        &:last-child {
+          &::after {
+            content: "";
+          }
+        }
+      }
 
       .el-col {
         padding: 8px 0;

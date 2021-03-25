@@ -41,7 +41,7 @@
       </div>
 
       <div class="projEdit__rightBox--tableBox">
-        <el-table :data="tableData" style="width: 100%" border>
+        <el-table :data="tableData" style="width: 100%" border empty-text="暫無數據">
           <el-table-column prop="date" label="日期" width="180">
           </el-table-column>
           <el-table-column prop="name" label="姓名" width="180">

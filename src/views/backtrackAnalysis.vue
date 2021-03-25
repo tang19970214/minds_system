@@ -15,7 +15,7 @@
         <div class="backtrackAnalysis__searchBox--fromAndBtn">
           <div class="analysisFrom">
             <label>分析來源：</label>
-            <el-select v-model="analysisFrom" placeholder="請選擇查詢來源">
+            <el-select v-model="analysisFrom" placeholder="請選擇查詢來源" no-data-text="無數據">
               <el-option label="請選擇" value="">
               </el-option>
             </el-select>
@@ -33,7 +33,7 @@
         <strong>新詞代表</strong>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="selection" width="55">
         </el-table-column>
         <el-table-column label="日期" width="120">

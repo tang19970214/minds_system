@@ -8,17 +8,19 @@
       <div class="projSearch__searchBox" v-if="openSearchBox">
         <div class="projSearch__searchBox--sort">
           <label>專卷分類：</label>
-          <el-select v-model="projSort" placeholder="請選擇專卷分類">
-            <el-option label="請選擇" value="">
-            </el-option>
+          <el-select v-model="projSort" placeholder="請選擇專卷分類" no-data-text="無數據">
+            <el-option label="請選擇" value=""></el-option>
+            <el-option :label="item.name" :value="item.name" v-for="item in sortList" :key="item.id"></el-option>
           </el-select>
         </div>
 
         <div class="projSearch__searchBox--theme">
           <label>專卷主題：</label>
-          <el-select v-model="projTheme" placeholder="請選擇專卷主題">
-            <el-option label="請選擇" value="">
-            </el-option>
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題" :disabled="!projSort" v-if="getChild(themeList).length > 0" no-data-text="無數據">
+            <el-option :label="item.name" :value="item.name" v-for="item in getChild(themeList)[0].children" :key="item.id"></el-option>
+          </el-select>
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題" v-else>
+            <el-option label="請選擇" value=""></el-option>
           </el-select>
         </div>
       </div>
@@ -63,23 +65,47 @@ export default {
   data() {
     return {
       openSearchBox: true,
-      listQuery: {
-        UserId: 3,
-        TopicId: 16,
-        Page: 1,
-        PageSize: 10,
-      },
+      //   listQuery: {
+      //     UserId: 3,
+      //     TopicId: 16,
+      //     Page: 1,
+      //     PageSize: 10,
+      //   },
       projSort: "",
       projTheme: "",
+      sortList: [],
+      themeList: [],
       tableData: [],
       multipleSelection: [],
     };
   },
+  computed: {
+    getChild() {
+      return (data) => {
+        const getChildItem =
+          data.filter((res) => res.name == this.projSort) || [];
+        return getChildItem;
+      };
+    },
+  },
   methods: {
+    // getList() {
+    //   this.$api.getDataByTopicId(this.listQuery).then((res) => {
+    //     console.log(res.data);
+    //     this.tableData = res.data;
+    //   });
+    // },
+    /* 獲取專卷資料 */
     getList() {
-      this.$api.getDataByTopicId(this.listQuery).then((res) => {
-        console.log(res.data);
-        this.tableData = res.data;
+      this.$api.getUserTopic({ UserId: 3 }).then((res) => {
+        this.sortList = res.data.filter((resp) => resp.pid == null);
+        const childrenList = res.data.filter((sup) => sup.pid !== null);
+        this.themeList = this.sortList.map((p) => {
+          p.children = childrenList.filter((c) => {
+            return c.pid === p.id;
+          });
+          return p;
+        });
       });
     },
     openRelationAnalysis() {

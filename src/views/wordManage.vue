@@ -9,7 +9,7 @@
         <div class="wordManage__searchBox--kindAndSort">
           <div class="kind">
             <label>維護詞庫類別：</label>
-            <el-select v-model="wordClass" placeholder="請選擇詞庫類別">
+            <el-select v-model="wordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
               <el-option label="請選擇" value=""></el-option>
               <el-option :label="item.termName" :value="item.termName" v-for="item in wordClassList" :key="item.id"></el-option>
             </el-select>
@@ -17,7 +17,7 @@
 
           <div class="sort">
             <label>實體詞分類：</label>
-            <el-select v-model="wordSort" placeholder="請選擇實體詞分類">
+            <el-select v-model="wordSort" placeholder="請選擇實體詞分類" no-data-text="無數據">
               <el-option label="請選擇" value="">
               </el-option>
             </el-select>
@@ -42,7 +42,7 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="selection" width="55">
         </el-table-column>
         <el-table-column type="index" label="序號" width="60">

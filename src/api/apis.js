@@ -15,8 +15,8 @@ const api = {
   },
 
   // 獲取使用者
-  getuserlist(data) {
-    return req("post", "getuserlist", data);
+  getUserList(data) {
+    return req("post", "User/getUserList", data);
   },
 
   // 獲取菜單
