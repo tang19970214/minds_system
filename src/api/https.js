@@ -44,7 +44,7 @@ let instance = axios.create({
 // request 攔截
 instance.interceptors.request.use(
   (config) => {
-    const token = window.localStorage.getItem("driverToken");
+    const token = window.localStorage.getItem("userToken");
     token && (config.headers["X-Token"] = `${token}`);
     return config;
   },

@@ -56,14 +56,10 @@
         </el-table-column>
         <el-table-column label="序號" type="index" width="50">
         </el-table-column>
-        <el-table-column label="建立人" prop="newsTitle" width="100">
+        <el-table-column label="新聞標題" prop="newsTitle">
         </el-table-column>
         <el-table-column label="建立時間" width="200">
           <template slot-scope="scope">{{ scope.row.createdTime | moment("YYYY-MM-DD HH:mm") }}</template>
-        </el-table-column>
-        <el-table-column label="專卷內容標題" prop="title">
-        </el-table-column>
-        <el-table-column label="備註" prop="remark">
         </el-table-column>
       </el-table>
     </div>

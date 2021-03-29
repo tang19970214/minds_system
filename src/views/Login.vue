@@ -32,7 +32,7 @@ export default {
   data() {
     return {
       userInfo: {
-        account: "Patrick",
+        account: "patrick@gmail.com",
         password: "abc1234",
       },
     };

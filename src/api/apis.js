@@ -87,6 +87,14 @@ const api = {
   deleteUserTopic(data) {
     return req("post", "UserTopic/deleteUserTopic", data);
   },
+
+  // 帳號管理
+  /* 新增 */
+  addUser(data) {
+    return req("post", "User/addUser", data);
+  },
+  /* 修改 */
+  /* 刪除 */
 };
 
 export default api;

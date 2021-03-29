@@ -3,7 +3,9 @@
     <div class="home__searchBox">
       <strong>最近1日新增資料</strong>
       <!-- 長條圖 -->
-
+      <svg id="d3Chart"></svg>
+      {{sampleData}}
+      <!-- <div id="d3Chart"></div> -->
     </div>
 
     <div class="home__listBox">
@@ -37,6 +39,7 @@
 
 <script>
 import moment from "moment";
+import * as d3 from "d3";
 
 export default {
   name: "Home",
@@ -44,7 +47,6 @@ export default {
     return {
       dayAddNum: "",
       listQuery: {
-        //  moment(new Date()).format("YYYY-MM-DD")
         sDate: "2020-01-01",
         eDate: "2021-12-31",
         query: "",
@@ -53,15 +55,13 @@ export default {
         page: 1,
         pageSize: 10,
       },
-      // detailQuery: {},
       staticsQuery: {
         sDate: "2020-01-01",
         eDate: "2021-12-31",
-        query: "",
-        nSite: "NewsSite",
       },
       tableData: [],
       multipleSelection: [],
+      sampleData: [],
     };
   },
   methods: {
@@ -70,14 +70,11 @@ export default {
         this.tableData = res.data;
       });
     },
-    // getDetail() {
-    //   this.$api.getNewsDetail(this.detailQuery).then((res) => {
-    //     console.log("detail", res);
-    //   });
-    // },
-    getStatics() {
-      this.$api.getNewsStatics(this.staticsQuery).then((res) => {
-        console.log("statics", res);
+    async getStatics() {
+      await this.$api.getNewsStatics(this.staticsQuery).then((res) => {
+        // console.log("statics", res.data);
+        this.sampleData = res.data.map((item) => item.value);
+        // console.log(this.sampleData);
       });
     },
     toggleSelection(rows) {
@@ -96,10 +93,96 @@ export default {
       let routeUrl = this.$router.resolve({ name: "projEdit" });
       window.open(routeUrl.href, "_blank");
     },
+    draw1() {
+      let data = [
+        { x: 1, w: Math.floor(Math.random() * 200) },
+        { x: 2, w: Math.floor(Math.random() * 200) },
+        { x: 3, w: Math.floor(Math.random() * 200) },
+        { x: 4, w: Math.floor(Math.random() * 200) },
+        { x: 5, w: Math.floor(Math.random() * 200) },
+      ];
+      console.log(data);
+      // let s = d3.select("body").append("svg").attr({
+      //   width: 300,
+      //   height: 300,
+      // });
+      let s = d3.select("svg").attr("width", 500).attr("height", 300);
+
+      s.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => 500 - d.w)
+        .attr("height", (d) => d.w)
+        .attr("width", (d) => d.w);
+      // .attr({
+      //   fill: "#09c",
+      //   width: function (d) {
+      //     return d.w;
+      //   },
+      //   height: 30,
+      //   x: 0,
+      //   y: function (d) {
+      //     return (d.x - 1) * 35;
+      //   },
+      // });
+      console.log(s);
+    },
+    draw() {
+      // newData = [
+      //   Math.floor(Math.random() * 200),
+      //   Math.floor(Math.random() * 200),
+      //   Math.floor(Math.random() * 200),
+      //   Math.floor(Math.random() * 200),
+      //   Math.floor(Math.random() * 200),
+      // ];
+      let dataset = this.sampleData;
+      let maxdata = Math.max(dataset);
+      console.log(maxdata);
+      console.log(this.sampleData);
+      // return;
+      // console.log(window);
+      // 定義svg圖形寬高，以及柱狀圖間距
+      let svgWidth = 500,
+        svgHeight = 300,
+        barPadding = 5;
+      // 通過圖形計算每個柱狀寬度
+      let barWidth = svgHeight / dataset.length;
+      // 繪製圖形
+      let svg = d3
+        .select("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
+      // rect，長方形
+      // 文檔：http://www.w3school.com.cn/svg/svg_rect.asp
+      svg
+        .selectAll("rect")
+        .data(dataset) //綁定數組
+        .enter() // 指定選擇集的enter部分
+        .append("rect") // 添加足夠數量的矩形
+        .attr("y", (d, idx) => (idx + 1) * 50) //每個數據間的距離
+        .attr("height", 30) // 設定高度
+        .attr("width", (d) => {
+          console.log(maxdata);
+          // console.log(dataset.map((n) => Math.max(n)));
+          // console.log(Math.max(dataset));
+          return d;
+        }) // 設定寬度
+        .style("fill", "steelblue"); // 設定數據條顏色
+    },
   },
-  mounted() {
+  async mounted() {
     this.getList();
-    this.getStatics();
+    await this.getStatics();
+    this.draw();
+  },
+  created() {
+    d3.select("#d3Chart").append("svg").attr("width", 500).attr("height", 500);
+  },
+  watch: {
+    // sampleData: function () {
+    //   this.draw(this.sampleData);
+    // },
   },
 };
 </script>
@@ -116,6 +199,11 @@ export default {
     strong {
       font-size: 24px;
       color: #191972;
+    }
+
+    svg {
+      width: 100%;
+      background: pink;
     }
   }
 

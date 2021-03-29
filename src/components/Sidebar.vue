@@ -72,6 +72,7 @@ export default {
             userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
           })
           .then((res) => {
+            console.log(res);
             if (res.data) {
               window.localStorage.removeItem("userInfo");
               window.localStorage.removeItem("menu");
