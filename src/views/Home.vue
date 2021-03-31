@@ -3,9 +3,9 @@
     <div class="home__searchBox">
       <strong>最近1日新增資料</strong>
       <!-- 長條圖 -->
-      <svg id="d3Chart"></svg>
+      <!-- <svg id="d3Chart"></svg> -->
+      <div id="d3Chart"></div>
       {{sampleData}}
-      <!-- <div id="d3Chart"></div> -->
     </div>
 
     <div class="home__listBox">
@@ -93,52 +93,79 @@ export default {
       let routeUrl = this.$router.resolve({ name: "projEdit" });
       window.open(routeUrl.href, "_blank");
     },
-    draw1() {
-      let data = [
-        { x: 1, w: Math.floor(Math.random() * 200) },
-        { x: 2, w: Math.floor(Math.random() * 200) },
-        { x: 3, w: Math.floor(Math.random() * 200) },
-        { x: 4, w: Math.floor(Math.random() * 200) },
-        { x: 5, w: Math.floor(Math.random() * 200) },
-      ];
-      console.log(data);
-      // let s = d3.select("body").append("svg").attr({
-      //   width: 300,
-      //   height: 300,
-      // });
-      let s = d3.select("svg").attr("width", 500).attr("height", 300);
+    draw() {
+      let data = this.sampleData;
+      let bar_height = 30;
+      let bar_padding = 10;
+      let svg_height = (bar_height + bar_padding) * data.length;
+      let svg_width = window.innerWidth - 300;
 
-      s.selectAll("rect")
+      let scale = d3
+        .scaleLinear()
+        .domain([0, d3.max(data)])
+        .range([0, svg_width]);
+
+      let svg = d3
+        .select("#d3Chart")
+        .append("svg")
+        .attr("width", svg_width)
+        .attr("height", svg_height);
+
+      let bar = svg
+        .selectAll("g")
         .data(data)
         .enter()
+        .append("g")
+        .attr("transform", function (d, i) {
+          return "translate(0," + i * (bar_height + bar_padding) + ")";
+        });
+
+      bar
         .append("rect")
-        .attr("x", (d) => 500 - d.w)
-        .attr("height", (d) => d.w)
-        .attr("width", (d) => d.w);
-      // .attr({
-      //   fill: "#09c",
-      //   width: function (d) {
-      //     return d.w;
-      //   },
-      //   height: 30,
-      //   x: 0,
-      //   y: function (d) {
-      //     return (d.x - 1) * 35;
-      //   },
-      // });
-      console.log(s);
+        .transition()
+        .duration(1500)
+        .attr("width", (d) => scale(d))
+        .attr("height", bar_height)
+        .style("fill", "#00abb9");
+
+      bar
+        .append("text")
+        .text((d) => Math.round(scale(d)) / 10 + "%")
+        /* x, y 設定文字位置，text-anchor 將文字定位在尾端 */
+        .attr("x", (d) => Math.round(scale(d)) - 10)
+        .attr("y", bar_height / 1.5)
+        .attr("text-anchor", "end")
+        .style("fill", "#FFF");
+
+      svg
+        .on("mouseover", (d) => {
+          console.log(d);
+          bar
+            .append("rect")
+            .style("fill", "#FFF")
+            .style("border", "1px solid black");
+          // bar
+          //   .append("text")
+          //   .text(d)
+          //   .attr(
+          //     "x",
+          //     parseFloat(d3.select(this).attr("x")) +
+          //       parseFloat(d3.select(this).attr("width") / 2) -
+          //       11
+          //   )
+          //   .attr("y", parseFloat(d3.select(this).attr("y")) + 20)
+          //   .attr("fill", "#fff")
+          // .attr("id", "tooltip");
+        })
+        .on("mouseout", (d) => {
+          console.log(d3.select("#tooltip"), d);
+          d3.select("#tooltip").remove();
+        });
     },
-    draw() {
-      // newData = [
-      //   Math.floor(Math.random() * 200),
-      //   Math.floor(Math.random() * 200),
-      //   Math.floor(Math.random() * 200),
-      //   Math.floor(Math.random() * 200),
-      //   Math.floor(Math.random() * 200),
-      // ];
+    draw1() {
       let dataset = this.sampleData;
-      let maxdata = Math.max(dataset);
-      console.log(maxdata);
+      // let maxdata = Math.max(dataset);
+      // console.log(maxdata);
       console.log(this.sampleData);
       // return;
       // console.log(window);
@@ -163,12 +190,13 @@ export default {
         .attr("y", (d, idx) => (idx + 1) * 50) //每個數據間的距離
         .attr("height", 30) // 設定高度
         .attr("width", (d) => {
-          console.log(maxdata);
+          // console.log(maxdata);
           // console.log(dataset.map((n) => Math.max(n)));
           // console.log(Math.max(dataset));
           return d;
         }) // 設定寬度
-        .style("fill", "steelblue"); // 設定數據條顏色
+        .style("fill", "steelblue") // 設定數據條顏色
+        .style("cursor", "pointer");
     },
   },
   async mounted() {
@@ -203,7 +231,7 @@ export default {
 
     svg {
       width: 100%;
-      background: pink;
+      // background: pink;
     }
   }
 

@@ -5,7 +5,7 @@ function resolve(dir) {
 }
 
 module.exports = {
-    // publicPath: "/",
+    publicPath: "/dist/",
     lintOnSave: process.env.NODE_ENV !== "production",
     devServer: {
         port: 3000, // 端口

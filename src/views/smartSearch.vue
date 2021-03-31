@@ -16,8 +16,8 @@
           <div class="searchFrom">
             <label>查詢來源：</label>
             <el-select v-model="searchFrom" placeholder="請選擇查詢來源" no-data-text="無數據">
-              <el-option label="請選擇" value="">
-              </el-option>
+              <el-option label="請選擇" value=""></el-option>
+              <el-option v-for="item in searchList" :key="item.id" :label="item.gKey" :value="item.gKey"></el-option>
             </el-select>
           </div>
         </div>
@@ -31,7 +31,7 @@
 
     <div class="smartSearchPage__listBox">
       <div class="smartSearchPage__listBox--joinAnalysis">
-        <span>
+        <span @click="goProjEdit()">
           <i class="el-icon-circle-plus-outline"></i>
           <a>加入專卷分析</a>
         </span>
@@ -78,28 +78,28 @@ export default {
       dateRange: "",
       searchFrom: "",
       searchKeyword: "",
+      searchList: [],
       tableData: [],
       multipleSelection: [],
     };
   },
   methods: {
-    getList() {
-      this.$api.getNewsList(this.listQuery).then((res) => {
-        console.log(res);
-        this.tableData = res.data;
+    /* 取得搜尋來源資料 */
+    getSearchList() {
+      const searchQuery = {
+        sDate: "2020-01-01",
+        eDate: "2021-12-31",
+      };
+      this.$api.getNewsStatics(searchQuery).then((res) => {
+        this.searchList = res.data;
       });
     },
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach((row) => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
-      }
-    },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+
+    /* 取得表格資料 */
+    getList() {
+      this.$api.getNewsList(this.listQuery).then((res) => {
+        this.tableData = res.data;
+      });
     },
     searchNews() {
       if (!this.dateRange && !this.searchFrom && !this.searchKeyword) {
@@ -117,10 +117,14 @@ export default {
       } else {
         this.listQuery = {
           userId: 1,
-          sDate: moment(this.dateRange[0]).format("YYYY-MM-DD"),
-          eDate: moment(this.dateRange[1]).format("YYYY-MM-DD"),
-          query: "",
-          nSite: "全部",
+          sDate: this.dateRange
+            ? moment(this.dateRange[0]).format("YYYY-MM-DD")
+            : "2020-01-01",
+          eDate: this.dateRange
+            ? moment(this.dateRange[1]).format("YYYY-MM-DD")
+            : "2021-12-31",
+          query: this.searchKeyword,
+          nSite: this.searchFrom,
           nChannel: "全部",
           page: 1,
           pageSize: 10,
@@ -128,8 +132,26 @@ export default {
       }
       this.getList();
     },
+
+    goProjEdit() {
+      let routeUrl = this.$router.resolve({ name: "projEdit" });
+      window.open(routeUrl.href, "_blank");
+    },
+    toggleSelection(rows) {
+      if (rows) {
+        rows.forEach((row) => {
+          this.$refs.multipleTable.toggleRowSelection(row);
+        });
+      } else {
+        this.$refs.multipleTable.clearSelection();
+      }
+    },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
   },
   mounted() {
+    this.getSearchList();
     this.getList();
   },
 };

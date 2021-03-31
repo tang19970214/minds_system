@@ -34,15 +34,27 @@
       </div>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="55">
+        <el-table-column type="selection" width="50"></el-table-column>
+        <el-table-column label="序號" type="index" width="50"></el-table-column>
+        <el-table-column label="資料來源" prop="name" width="150"></el-table-column>
+        <el-table-column label="新詞名稱" prop="name" width="150"></el-table-column>
+        <el-table-column label="選擇詞庫類型">
+          <!-- <template slot-scope="scope"> -->
+          <el-select v-model="wordType" placeholder="請選擇詞庫類型">
+            <el-option label="請選擇" value=""></el-option>
+            <!-- <el-option :label="scope.row.date" :value="scope.row.date"></el-option> -->
+          </el-select>
+          <!-- </template> -->
         </el-table-column>
-        <el-table-column label="日期" width="120">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
+        <el-table-column label="選擇實體分類">
+          <!-- <template slot-scope="scope"> -->
+          <el-select v-model="wordType" placeholder="請選擇實體分類">
+            <el-option label="請選擇" value=""></el-option>
+            <!-- <el-option :label="scope.row.date" :value="scope.row.date"></el-option> -->
+          </el-select>
+          <!-- </template> -->
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120">
-        </el-table-column>
-        <el-table-column prop="address" label="地址" show-overflow-tooltip>
-        </el-table-column>
+        <el-table-column label="備註" prop="remark"></el-table-column>
       </el-table>
     </div>
   </div>
@@ -59,39 +71,30 @@ export default {
         {
           date: "2016-05-03",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          remark: "",
         },
         {
           date: "2016-05-02",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          remark: "",
         },
         {
           date: "2016-05-04",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          remark: "",
         },
         {
           date: "2016-05-01",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          remark: "",
         },
         {
           date: "2016-05-08",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          remark: "",
         },
       ],
+      wordType: "",
       multipleSelection: [],
     };
   },
