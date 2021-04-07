@@ -5,7 +5,8 @@ function resolve(dir) {
 }
 
 module.exports = {
-    publicPath: "/minds_system/dist/",
+    // publicPath: "/minds_system/dist/",
+    publicPath: "",
     lintOnSave: process.env.NODE_ENV !== "production",
     devServer: {
         port: 3000, // 端口
