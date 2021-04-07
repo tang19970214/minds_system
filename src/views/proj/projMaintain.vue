@@ -190,9 +190,10 @@ export default {
         });
     },
     /* 獲取表格資料 */
-    getList() {
-      this.$api.getDataByTopicId(this.listQuery).then((res) => {
+    async getList() {
+      await this.$api.getDataByTopicId(this.listQuery).then((res) => {
         this.tableData = res.data;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
 
@@ -513,6 +514,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getUser();
     this.getProjSort();
     this.getList();

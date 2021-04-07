@@ -193,6 +193,7 @@ export default {
         })
         .then((res) => {
           userData = res.data;
+          this.$store.dispatch("loadingHandler", false);
         });
 
       if (userInfo.roleLevel === 2) {
@@ -270,6 +271,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getUserList();
     this.tableData = [JSON.parse(window.localStorage.getItem("userInfo"))];
     this.getUserRole = JSON.parse(

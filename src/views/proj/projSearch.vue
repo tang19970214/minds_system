@@ -16,12 +16,10 @@
 
         <div class="projSearch__searchBox--theme">
           <label>專卷主題：</label>
-          <el-select v-model="projTheme" placeholder="請選擇專卷主題" :disabled="!projSort" v-if="getChild(themeList).length > 0" no-data-text="無數據">
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題" v-if="getChild(themeList).length > 0" no-data-text="無數據">
             <el-option :label="item.name" :value="item.name" v-for="item in getChild(themeList)[0].children" :key="item.id"></el-option>
           </el-select>
-          <el-select v-model="projTheme" placeholder="請選擇專卷主題" v-else>
-            <el-option label="請選擇" value=""></el-option>
-          </el-select>
+          <el-select v-model="projTheme" placeholder="請先選擇專卷分類" :disabled="!projSort" v-else></el-select>
         </div>
       </div>
     </transition>
@@ -96,8 +94,8 @@ export default {
     //   });
     // },
     /* 獲取專卷資料 */
-    getList() {
-      this.$api.getUserTopic({ UserId: 3 }).then((res) => {
+    async getList() {
+      await this.$api.getUserTopic({ UserId: 3 }).then((res) => {
         this.sortList = res.data.filter((resp) => resp.pid == null);
         const childrenList = res.data.filter((sup) => sup.pid !== null);
         this.themeList = this.sortList.map((p) => {
@@ -106,6 +104,7 @@ export default {
           });
           return p;
         });
+        this.$store.dispatch("loadingHandler", false);
       });
     },
     openRelationAnalysis() {
@@ -126,6 +125,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getList();
   },
 };

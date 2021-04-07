@@ -67,12 +67,12 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
+        this.$store.dispatch("loadingHandler", true);
         this.$api
           .logout({
             userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
           })
           .then((res) => {
-            console.log(res);
             if (res.data) {
               window.localStorage.removeItem("userInfo");
               window.localStorage.removeItem("menu");
@@ -82,6 +82,7 @@ export default {
               });
               this.$router.push({ name: "login" });
             }
+            this.$store.dispatch("loadingHandler", false);
           });
       });
     },

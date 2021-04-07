@@ -38,14 +38,15 @@ export default {
     };
   },
   methods: {
-    login() {
+    async login() {
+      this.$store.dispatch("loadingHandler", true);
       const info = {
         name: this.userInfo.account,
         pass: this.userInfo.password,
         SessionId: "",
         SourceIP: "",
       };
-      this.$api.login(info).then((res) => {
+      await this.$api.login(info).then((res) => {
         if (res.data.message == null) {
           this.setUserInfo(res.data);
           this.setUniMenu();
@@ -53,6 +54,7 @@ export default {
             type: "success",
             message: "登入成功!",
           });
+          this.$store.dispatch("loadingHandler", false);
           this.$router.push("/Home");
         } else {
           this.$message.error(res.data.message);

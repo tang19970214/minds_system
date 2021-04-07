@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <Loading />
     <div id="nav">
       <el-aside class="mainLayoutAside" :class="{ isCollapse: isCollapse }" v-if="!$route.meta.hideMenu">
         <div class="mainLayoutAside__title" :class="{'mainLayoutAside__shrink': isCollapse}" :style="{'flex-direction: column': !isCollapse}">
@@ -23,10 +24,11 @@
 </template>
 
 <script>
+import Loading from "./components/Loading.vue";
 import Sidebar from "./components/Sidebar.vue";
 
 export default {
-  components: { Sidebar },
+  components: { Loading, Sidebar },
   data() {
     return {
       userInfo: null,

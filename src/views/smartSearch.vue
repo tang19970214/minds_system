@@ -96,9 +96,10 @@ export default {
     },
 
     /* 取得表格資料 */
-    getList() {
-      this.$api.getNewsList(this.listQuery).then((res) => {
-        this.tableData = res.data;
+    async getList() {
+      await this.$api.getNewsList(this.listQuery).then((res) => {
+        this.tableData = res.data.data;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
     searchNews() {
@@ -151,6 +152,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getSearchList();
     this.getList();
   },

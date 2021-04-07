@@ -77,6 +77,7 @@ export default {
       this.$api.getNewsList(this.listQuery).then((res) => {
         this.tableData = res.data.data;
         this.listNum = res.data.count;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
     async getStatics() {
@@ -193,6 +194,7 @@ export default {
         .on("mouseover", tooltip.show)
         .on("mouseout", tooltip.hide)
         .on("click", (event, item) => {
+          this.$store.dispatch("loadingHandler", true);
           const getKeyData = this.sampleData.filter(
             (res) => res.gKey == item.data.gKey
           );
@@ -274,17 +276,10 @@ export default {
     },
   },
   async mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getList();
     await this.getStatics();
     this.draw();
-  },
-  created() {
-    // d3.select("#d3Chart").append("svg").attr("width", 500).attr("height", 500);
-  },
-  watch: {
-    // sampleData: function () {
-    //   this.draw(this.sampleData);
-    // },
   },
 };
 </script>

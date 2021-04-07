@@ -97,10 +97,11 @@ export default {
         this.wordClassList = res.data;
       });
     },
-    getList() {
-      this.$api.getKeyWord(this.listQuery).then((res) => {
-        console.log(res.data);
+    async getList() {
+      await this.$api.getKeyWord(this.listQuery).then((res) => {
+        // console.log(res.data);
         this.tableData = res.data;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
     toggleSelection(rows) {
@@ -117,6 +118,7 @@ export default {
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getKeyClass();
     this.getList();
   },
