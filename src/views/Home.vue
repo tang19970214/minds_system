@@ -3,7 +3,10 @@
     <div class="home__searchBox">
       <strong>最近1日新增資料</strong>
       <!-- 長條圖 -->
-      <div id="d3Chart"></div>
+      <div id="d3Chart" v-if="sampleData.length > 0"></div>
+      <div class="home__searchBox--noData" v-else>
+        <label>本日無新增資料</label>
+      </div>
     </div>
 
     <div class="home__listBox" id="contentBody">
@@ -23,14 +26,17 @@
       </div>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <!-- <el-table-column type="selection" width="50"></el-table-column> -->
+        <el-table-column type="selection" width="50"></el-table-column>
         <el-table-column label="序號" type="index" width="50"></el-table-column>
-        <el-table-column label="類型" prop="newsSite" width="100"></el-table-column>
+        <el-table-column label="類型" prop="source" width="100"></el-table-column>
         <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
         <el-table-column label="新聞時間" width="150">
-          <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
+          <template slot-scope="scope">
+            <div>{{ scope.row.newsTime | moment("YYYY-MM-DD") }}</div>
+            <div>{{ scope.row.newsTime | moment("HH:mm") }}</div>
+          </template>
         </el-table-column>
-        <el-table-column label="新聞網站" prop="newsUrl"></el-table-column>
+        <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
         <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
         <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
       </el-table>
@@ -64,7 +70,7 @@ export default {
       },
       listNum: null,
       staticsQuery: {
-        sDate: "2020-01-01",
+        sDate: "2021-02-01",
         eDate: "2021-12-31",
       },
       tableData: [],
@@ -114,22 +120,34 @@ export default {
       this.getList();
     },
     goProjEdit() {
-      let routeUrl = this.$router.resolve({ name: "projEdit" });
-      window.open(routeUrl.href, "_blank");
+      if (this.multipleSelection.length > 0) {
+        const dataID = [];
+        this.multipleSelection.forEach((element) => {
+          dataID.push(element.id);
+        });
+        let routeUrl = this.$router.resolve({
+          name: "projEdit",
+          query: { chooseID: JSON.stringify(dataID) },
+        });
+        window.open(routeUrl.href, "_blank");
+      } else {
+        this.$message({
+          message: "請至少選擇一筆資料",
+          type: "warning",
+        });
+      }
     },
     draw() {
       let data = this.sampleData;
       let svgWidth = window.innerWidth - 300;
-      let svgHeight = 40 * data.length;
-      let barSize = 30;
+      let svgHeight = 30 * data.length;
+      let barSize = 20;
       let barPadding = 10;
 
       let getValue = [];
       data.forEach((element) => {
-        // console.log(element.value);
         getValue.push(element.value);
       });
-      console.log(getValue);
 
       let scale = d3
         .scaleLinear()
@@ -174,7 +192,7 @@ export default {
         .transition()
         .duration(1000)
         .attr("x", 100)
-        .attr("width", (d) => d.value)
+        .attr("width", (d) => scale(d.value))
         .attr("height", barSize)
         .style("fill", "#00abb9");
 
@@ -201,63 +219,6 @@ export default {
           console.log(getKeyData[0]);
           this.listQuery.nSite = getKeyData[0].gKey;
           this.getList();
-        });
-    },
-    draw1() {
-      let data = this.sampleData.map((item) => item.value);
-      let width = window.innerWidth - 300;
-      let height = 40 * data.length;
-      let barSize = 30;
-      let barPadding = 10;
-
-      let scale = d3
-        .scaleLinear()
-        .domain([0, d3.max(data)])
-        .range([0, width]);
-
-      let svg = d3
-        .select("#d3Chart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-      let bar = svg
-        .selectAll("g")
-        .data(data)
-        .enter()
-        .append("g")
-        .attr("transform", (d, i) => {
-          return "translate(0," + i * (barSize + barPadding) + ")";
-        });
-
-      bar
-        .append("rect")
-        .transition()
-        .duration(1000)
-        .attr("width", (d) => scale(d))
-        .attr("height", barSize)
-        .style("fill", "#00abb9")
-        .style("cursor", "pointer");
-
-      bar
-        .append("text")
-        .text((d) => d)
-        /* x, y 設定文字位置，text-anchor 將文字定位在尾端 */
-        .attr("x", (d) => Math.round(scale(d)) - 10)
-        .attr("y", barSize / 1.5)
-        .attr("text-anchor", "end")
-        .style("fill", "#FFF");
-
-      /* 設定tooltip */
-      const tooltip = this.setTooltip();
-      bar.call(tooltip);
-      bar
-        .on("mouseover", tooltip.show)
-        .on("mouseout", tooltip.hide)
-        .on("click", (event, val) => {
-          console.log(this);
-          const getKeyData = this.sampleData.filter((res) => res.value == val);
-          console.log(getKeyData);
         });
     },
     setTooltip() {
@@ -305,6 +266,14 @@ export default {
       g:hover {
         opacity: 0.8;
       }
+    }
+
+    &--noData {
+      padding-top: 20px;
+      font-size: 18px;
+      color: red;
+      font-weight: bolder;
+      // text-decoration: underline;
     }
   }
 

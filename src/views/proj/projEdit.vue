@@ -25,6 +25,11 @@
             <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" style="width: 100%" border empty-text="暫無數據">
               <el-table-column prop="id" label="序號" width="60px"></el-table-column>
               <el-table-column prop="name" label="專卷主題"></el-table-column>
+              <el-table-column fixed="right" label="操作" width="100">
+                <template slot-scope="scope">
+                  <el-button @click="chooseTheme(scope.row.name)" type="text" size="small" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">選擇</el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </div>
         </div>
@@ -49,7 +54,7 @@
           </el-col>
           <el-col :span="24">
             <strong>專卷主題：</strong>
-            <p class="childrenItem" v-for="(item, idx) in rightBoxData.projTheme" :key="idx">{{item}}</p>
+            <a class="childrenItem" :class="{'childrenItem__active':relationList[relationList.length - 1].label == item}" v-for="(item, idx) in rightBoxData.projTheme" :key="idx" @click="chooseTheme(item)">{{item}}</a>
           </el-col>
         </el-row>
       </div>
@@ -162,6 +167,16 @@ export default {
       searchSort: "",
       projSortList: [],
       projThemeList: [],
+      newsListQuery: {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        sDate: "2021-01-01",
+        eDate: "2021-12-31",
+        query: "",
+        nSite: "全部",
+        nChannel: "全部",
+        page: 1,
+        pageSize: 10,
+      },
       tableData: [],
       rightBoxData: {},
       //   專卷分類modal
@@ -192,7 +207,7 @@ export default {
       tableData: [],
       multipleSelection: [],
 
-      relationValue: [],
+      relationValue: [1, 2],
       relationList: [],
     };
   },
@@ -229,39 +244,32 @@ export default {
           });
         });
     },
-    async getRelationList() {
-      const listQuery = {
-        UserId: 3,
-        TopicId: 16,
-        Page: 1,
-        PageSize: 10,
-      };
-      await this.$api.getDataByTopicId(listQuery).then((res) => {
-        const newData = [];
-        res.data.forEach((element) => {
-          newData.push({
-            key: element.id,
-            label: element.newsId.toString(),
-          });
-        });
-        this.relationList = newData;
+    async getNewsList() {
+      await this.$api.getNewsList(this.newsListQuery).then((res) => {
+        this.tableData = res.data.data;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
-    getNewsList() {
-      const newsListQuery = {
-        userId: 1,
-        sDate: "2021-01-01",
-        eDate: "2021-12-31",
-        query: "",
-        nSite: "全部",
-        nChannel: "全部",
-        page: 1,
-        pageSize: 10,
-      };
-      this.$api.getNewsList(newsListQuery).then((res) => {
-        this.tableData = res.data;
+    getRelationList() {
+      let listIds = JSON.parse(this.$route.query.chooseID);
+      let chooseData = [];
+      let chooseIDX = [];
+      listIds.forEach((id) => {
+        let getItems = {};
+        let items = this.tableData.filter((res) => res.id == id)[0];
+        getItems = {
+          key: items.id,
+          label: items.newsTitle,
+          value: items.source,
+          disabled: true,
+        };
+        chooseData.push(getItems);
+        chooseIDX.push(id);
       });
+      this.relationList = chooseData;
+      this.relationValue = chooseIDX;
     },
+    /* 獲取所選專卷分類 */
     getProjData(val) {
       if (!!val) {
         const getFather = this.projThemeList.filter(
@@ -278,9 +286,38 @@ export default {
         };
       } else {
         this.rightBoxData = {};
+        this.getRelationList();
       }
     },
+    /* 選擇專卷主題並帶入現有分析內容 */
+    chooseTheme(val) {
+      /* 檢查是否已選擇主題 */
+      const checkTheme = this.relationList.filter((res) => res.value == "主題");
+      const getNews = this.relationList.filter((resp) => resp.value !== "主題");
+      const getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
+        (res) => res.name == val
+      )[0];
+      /* 若有選主題，則替代值 */
+      if (checkTheme.length > 0) {
+        checkTheme.map((i) => {
+          i.key = getTheme.id;
+          i.label = getTheme.name;
+          return i;
+        });
+      } else {
+        const addTheme = {
+          key: getTheme.id,
+          label: getTheme.name,
+          value: "主題",
+        };
+        this.relationList.push(addTheme);
+      }
 
+      getNews.map((item) => {
+        item.disabled = false;
+        return item;
+      });
+    },
     addSort() {
       this.$refs.ruleForm_addProjSort.validate((valid) => {
         if (valid) {
@@ -363,10 +400,11 @@ export default {
       this.multipleSelection = val;
     },
   },
-  mounted() {
+  async mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getProjSortList();
+    await this.getNewsList();
     this.getRelationList();
-    this.getNewsList();
   },
 };
 </script>
@@ -485,6 +523,21 @@ export default {
             content: "";
           }
         }
+
+        &__active {
+          color: #00abb9;
+        }
+      }
+
+      a {
+        font-weight: bolder;
+        color: #191970;
+        transition: 0.4s;
+        cursor: pointer;
+
+        &:hover {
+          color: #00abb9;
+        }
       }
 
       .el-col {
@@ -547,9 +600,35 @@ export default {
         border-bottom: 1px solid black;
 
         .el-transfer {
-          &-panel {
-            width: 40% !important;
+          &__buttons {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+
+            button {
+              margin: 0;
+
+              &:last-child {
+                margin-top: 16px;
+              }
+            }
           }
+
+          &-panel {
+            width: 45% !important;
+
+            &__body {
+              label {
+                span:last-child {
+                  width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+              }
+            }
+          }
+
           &-panel__empty {
             display: none !important;
           }
