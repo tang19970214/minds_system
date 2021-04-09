@@ -55,6 +55,13 @@ export default {
     // user
     this.userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
   },
+  watch: {
+    $route(n, o) {
+      if (o.name == "login" && n.name == "Home") {
+        window.location.reload();
+      }
+    },
+  },
 };
 </script>
 

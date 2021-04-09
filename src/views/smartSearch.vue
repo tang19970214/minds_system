@@ -38,21 +38,46 @@
       </div>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50">
-        </el-table-column>
-        <el-table-column label="序號" type="index" width="50">
-        </el-table-column>
-        <el-table-column label="新聞標題" prop="newsTitle">
-        </el-table-column>
+        <el-table-column type="selection" width="50"></el-table-column>
+        <!-- <el-table-column type="expand">
+          <template slot-scope="props">
+            <el-form label-position="left" inline class="demo-table-expand">
+              <el-form-item label="商品名称">
+                <span>{{ props.row.name }}</span>
+              </el-form-item>
+              <el-form-item label="所属店铺">
+                <span>{{ props.row.shop }}</span>
+              </el-form-item>
+              <el-form-item label="商品 ID">
+                <span>{{ props.row.id }}</span>
+              </el-form-item>
+              <el-form-item label="店铺 ID">
+                <span>{{ props.row.shopId }}</span>
+              </el-form-item>
+              <el-form-item label="商品分类">
+                <span>{{ props.row.category }}</span>
+              </el-form-item>
+              <el-form-item label="店铺地址">
+                <span>{{ props.row.address }}</span>
+              </el-form-item>
+              <el-form-item label="商品描述">
+                <span>{{ props.row.desc }}</span>
+              </el-form-item>
+            </el-form>
+          </template>
+        </el-table-column> -->
+        <el-table-column label="序號" type="index" width="50"></el-table-column>
+        <el-table-column label="類型" prop="source" width="100"></el-table-column>
+        <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
         <el-table-column label="新聞時間" width="150">
-          <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
+          <template slot-scope="scope">
+            <div>{{ scope.row.newsTime | moment("YYYY-MM-DD") }}</div>
+            <div>{{ scope.row.newsTime | moment("HH:mm") }}</div>
+          </template>
         </el-table-column>
-        <el-table-column label="新聞網站" prop="newsUrl">
-        </el-table-column>
-        <el-table-column label="新聞頻道" prop="newsChannel" width="100">
-        </el-table-column>
-        <el-table-column label="情緒指標" prop="sentiment" width="100">
-        </el-table-column>
+        <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
+        <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
+        <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
       </el-table>
     </div>
   </div>
@@ -65,7 +90,7 @@ export default {
   data() {
     return {
       listQuery: {
-        userId: 1,
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         sDate: "2021-01-01",
         eDate: "2021-12-31",
         query: "",
@@ -103,9 +128,10 @@ export default {
       });
     },
     searchNews() {
+      this.$store.dispatch("loadingHandler", true);
       if (!this.dateRange && !this.searchFrom && !this.searchKeyword) {
         this.listQuery = {
-          userId: 1,
+          userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
           sDate: "2021-01-01",
           eDate: "2021-12-31",
           query: "",
@@ -117,7 +143,7 @@ export default {
         this.getList();
       } else {
         this.listQuery = {
-          userId: 1,
+          userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
           sDate: this.dateRange
             ? moment(this.dateRange[0]).format("YYYY-MM-DD")
             : "2020-01-01",
@@ -130,13 +156,27 @@ export default {
           page: 1,
           pageSize: 10,
         };
+        this.getList();
       }
-      this.getList();
     },
 
     goProjEdit() {
-      let routeUrl = this.$router.resolve({ name: "projEdit" });
-      window.open(routeUrl.href, "_blank");
+      if (this.multipleSelection.length > 0) {
+        const dataID = [];
+        this.multipleSelection.forEach((element) => {
+          dataID.push(element.id);
+        });
+        let routeUrl = this.$router.resolve({
+          name: "projEdit",
+          query: { chooseID: JSON.stringify(dataID) },
+        });
+        window.open(routeUrl.href, "_blank");
+      } else {
+        this.$message({
+          message: "請至少選擇一筆資料",
+          type: "warning",
+        });
+      }
     },
     toggleSelection(rows) {
       if (rows) {

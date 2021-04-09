@@ -5,10 +5,14 @@
       <el-submenu v-if="item.children.length > 0" :index="item.path" :key="item.id">
         <!-- 父層 -->
         <template slot="title">
-          <i v-if="
+          <font-awesome-icon v-if="
               item.children &&
               item.children.length > 0
-            " :class="item.icon"></i>
+            " :icon="item.icon"></font-awesome-icon>
+          <!-- <i v-if="
+              item.children &&
+              item.children.length > 0
+            " :class="item.icon"></i> -->
           <span class="title-name" slot="title" v-if="!isCollapse">
             {{item.name}}
           </span>
@@ -18,7 +22,8 @@
           <!-- 實現元件(sidbar)嵌套 當子層不隱藏且不是按鈕時 -->
           <!-- <sidebar v-if="child.children && child.children.length > 0" :item="child" :index="child.id" :key="child.id" /> -->
           <el-menu-item :key="child.id" :index="child.path">
-            <i :class="child.icon"></i>
+            <!-- <i :class="child.icon"></i> -->
+            <font-awesome-icon :icon="child.icon" />
             <template slot="title">
               <span class="title-name" slot="title">{{ child.name }}</span>
             </template>
@@ -28,7 +33,8 @@
       <!-- 無子層 -->
       <template v-else>
         <el-menu-item v-if="item.name !== '登出'" :index="item.path" :key="item.id">
-          <i :class="item.icon"></i>
+          <font-awesome-icon :icon="item.icon" />
+          <!-- <i :class="item.icon"></i> -->
           <!-- <i class="el-icon-search"></i> -->
           <template slot="title">
             <!-- <i :class="item.icon"></i> -->
@@ -36,7 +42,8 @@
           </template>
         </el-menu-item>
         <el-menu-item v-else :index="item.path" @click="signout">
-          <i :class="item.icon"></i>
+          <font-awesome-icon :icon="item.icon" />
+          <!-- <i :class="item.icon"></i> -->
           <template slot="title">
             <span class="title-name" slot="title">{{ item.name }}</span>
           </template>
@@ -100,6 +107,12 @@ export default {
       i {
         margin-right: 0 !important;
       }
+    }
+  }
+
+  .title {
+    &-name {
+      padding-left: 8px;
     }
   }
 }

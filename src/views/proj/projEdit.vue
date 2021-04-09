@@ -46,7 +46,11 @@
         <el-row>
           <el-col :span="12">
             <strong>專卷分類：</strong>
-            <p>{{rightBoxData.projSort}}</p>
+            <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
+              <el-option label="請選擇" value=""></el-option>
+              <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
+            </el-select>
+            <!-- <p>{{rightBoxData.projSort}}</p> -->
           </el-col>
           <el-col :span="12">
             <strong>備註：</strong>
@@ -68,11 +72,11 @@
         </div>
 
         <!-- 關聯分析 -->
-        <el-transfer class="relationList" v-model="relationValue" :data="relationList" :titles="['現有分析內容', '候選關聯新聞']"></el-transfer>
+        <el-transfer class="relationList" v-model="relationValue" :data="relationList" :titles="['現有分析內容', '候選關聯新聞']" @change="getObject"></el-transfer>
 
         <div class="relationFuncBtn">
-          <el-button type="primary">儲存</el-button>
-          <el-button type="danger">取消</el-button>
+          <el-button type="primary" @click="saveTopic()">儲存</el-button>
+          <el-button type="danger" @click="getRelationList()">取消</el-button>
         </div>
       </div>
     </div>
@@ -122,14 +126,15 @@
             </el-date-picker>
           </el-col>
           <el-col :span="12">
-            <strong>搜尋來源：</strong>
+            <strong>查詢來源：</strong>
             <el-select v-model="searchRelation.searchFrom" placeholder="請選擇" no-data-text="無數據">
-              <el-option label="選項待補" value=""></el-option>
+              <el-option label="請選擇" value=""></el-option>
+              <el-option v-for="item in searchList" :key="item.id" :label="item.gKey" :value="item.gKey"></el-option>
             </el-select>
           </el-col>
           <el-col :span="24">
             <el-input type="text" v-model="searchRelation.keyword"></el-input>
-            <el-button type="primary">搜尋</el-button>
+            <el-button type="primary" @click="searchNewsList()">搜尋</el-button>
           </el-col>
         </el-row>
       </div>
@@ -137,6 +142,19 @@
       <div class="searchRelationModal__listBox">
         <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" border empty-text="暫無數據">
           <el-table-column type="selection" width="50"></el-table-column>
+          <el-table-column label="類型" prop="source" width="100"></el-table-column>
+          <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
+          <el-table-column label="新聞時間" width="150">
+            <template slot-scope="scope">
+              <div>{{ scope.row.newsTime | moment("YYYY-MM-DD") }}</div>
+              <div>{{ scope.row.newsTime | moment("HH:mm") }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
+          <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
+          <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
+
+          <!-- <el-table-column type="selection" width="50"></el-table-column>
           <el-table-column label="新聞標題" prop="newsTitle">
           </el-table-column>
           <el-table-column label="新聞時間" width="150">
@@ -147,8 +165,10 @@
           <el-table-column label="新聞頻道" prop="newsChannel" width="100">
           </el-table-column>
           <el-table-column label="情緒指標" prop="sentiment" width="100">
-          </el-table-column>
+          </el-table-column> -->
         </el-table>
+
+        <Page :listNum="listNum" :getPageSize="newsListQuery.pageSize" @handleSizeChange="handleSizeChange" @handleCurrentChange="handleCurrentChange" />
       </div>
 
       <span slot="footer" class="dialog-footer">
@@ -160,7 +180,12 @@
 </template>
 
 <script>
+import moment from "moment";
+
+import Page from "../../components/Page.vue";
+
 export default {
+  components: { Page },
   data() {
     return {
       openLeftBox: true,
@@ -199,16 +224,19 @@ export default {
       },
       // 關聯分析modal
       openSearchRelation: false,
+      searchList: [],
       searchRelation: {
         dateRange: "",
         searchFrom: "",
         keyword: "",
       },
       tableData: [],
+      listNum: null,
       multipleSelection: [],
 
       relationValue: [1, 2],
       relationList: [],
+      leftRelationIds: [],
     };
   },
   computed: {
@@ -228,6 +256,7 @@ export default {
     },
   },
   methods: {
+    /* 獲取專卷 */
     getProjSortList() {
       this.$api
         .getUserTopic({
@@ -244,12 +273,7 @@ export default {
           });
         });
     },
-    async getNewsList() {
-      await this.$api.getNewsList(this.newsListQuery).then((res) => {
-        this.tableData = res.data.data;
-        this.$store.dispatch("loadingHandler", false);
-      });
-    },
+    /* 獲取穿梭框資料 */
     getRelationList() {
       let listIds = JSON.parse(this.$route.query.chooseID);
       let chooseData = [];
@@ -268,6 +292,7 @@ export default {
       });
       this.relationList = chooseData;
       this.relationValue = chooseIDX;
+      // console.log(this.relationList, this.relationValue);
     },
     /* 獲取所選專卷分類 */
     getProjData(val) {
@@ -286,8 +311,8 @@ export default {
         };
       } else {
         this.rightBoxData = {};
-        this.getRelationList();
       }
+      this.getRelationList();
     },
     /* 選擇專卷主題並帶入現有分析內容 */
     chooseTheme(val) {
@@ -309,6 +334,7 @@ export default {
           key: getTheme.id,
           label: getTheme.name,
           value: "主題",
+          disabled: true,
         };
         this.relationList.push(addTheme);
       }
@@ -318,12 +344,13 @@ export default {
         return item;
       });
     },
+    /* 新增專卷分類 */
     addSort() {
       this.$refs.ruleForm_addProjSort.validate((valid) => {
         if (valid) {
           const sortQuery = {
             OrgId: 2,
-            UserId: 3,
+            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
             Name: this.addProjSort.name,
             Action: "http://localhost/aaa",
             Memo: "",
@@ -345,6 +372,7 @@ export default {
         }
       });
     },
+    /* 檢查是否有選擇專卷分類 */
     checkSort() {
       if (!!this.searchSort) {
         this.openAddProjTheme = true;
@@ -355,6 +383,7 @@ export default {
         });
       }
     },
+    /* 新增專卷主題 */
     addTheme() {
       this.$refs.ruleForm_addProjTheme.validate((valid) => {
         if (valid) {
@@ -387,24 +416,130 @@ export default {
         }
       });
     },
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach((row) => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
-      }
+
+    /* 取得左框資訊 */
+    getObject(arr) {
+      const getAllValue = this.relationList.map((v) => v.key);
+      this.leftRelationIds = getAllValue.filter((i) => !arr.includes(i));
     },
+    /* 儲存鈕 */
+    saveTopic() {
+      this.$confirm("確定要儲存嗎？", "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          this.$store.dispatch("loadingHandler", true);
+          const getTopicId = this.leftRelationIds[
+            this.leftRelationIds.length - 1
+          ];
+          const getNewsIds = this.leftRelationIds.filter(
+            (n, i) => i !== this.leftRelationIds.length - 1
+          );
+          const topicQuery = {
+            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+            TopicId: getTopicId,
+            NewsId: getNewsIds,
+          };
+          this.$api.addDataTopic(topicQuery).then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: "成功",
+                message: "儲存成功！",
+                type: "success",
+              });
+            } else {
+              this.$message.error("未知的錯誤，請重新操作！");
+            }
+            this.$store.dispatch("loadingHandler", false);
+          });
+        })
+        .catch(() => {});
+    },
+
+    // 搜尋關聯分析內容modal
+    /* 取得搜尋來源資料 */
+    getSearchList() {
+      const searchQuery = {
+        sDate: "2020-01-01",
+        eDate: "2021-12-31",
+      };
+      this.$api.getNewsStatics(searchQuery).then((res) => {
+        this.searchList = res.data;
+      });
+    },
+    /* 獲取列表 */
+    async getNewsList() {
+      await this.$api.getNewsList(this.newsListQuery).then((res) => {
+        this.tableData = res.data.data;
+        this.listNum = res.data.count;
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
+    /* 換頁鈕 */
+    handleSizeChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.newsListQuery.pageSize = val;
+      this.getNewsList();
+    },
+    handleCurrentChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.newsListQuery.page = val;
+      this.getNewsList();
+    },
+    /* 表格選擇 */
     handleSelectionChange(val) {
       this.multipleSelection = val;
+    },
+    /* 搜尋鈕 */
+    searchNewsList() {
+      this.$store.dispatch("loadingHandler", true);
+      this.newsListQuery.sDate = moment(
+        this.searchRelation.dateRange[0]
+      ).format("YYYY-MM-DD");
+      this.newsListQuery.eDate = moment(
+        this.searchRelation.dateRange[1]
+      ).format("YYYY-MM-DD");
+      this.newsListQuery.query = this.searchRelation.keyword;
+      this.newsListQuery.nSite = this.searchRelation.searchFrom;
+      this.getNewsList();
+    },
+    /* 加入候選關聯新聞 */
+    join() {
+      if (this.multipleSelection.length > 0) {
+        this.$store.dispatch("loadingHandler", true);
+        this.$router.push({
+          name: "projEdit",
+          query: {
+            chooseID: JSON.stringify(this.multipleSelection.map((i) => i.id)),
+          },
+        });
+        this.getRelationList();
+        this.openSearchRelation = false;
+        this.$store.dispatch("loadingHandler", false);
+      } else {
+        this.$message({
+          message: "請至少選擇一筆資料！",
+          type: "warning",
+        });
+      }
     },
   },
   async mounted() {
     this.$store.dispatch("loadingHandler", true);
     this.getProjSortList();
+    this.getSearchList();
     await this.getNewsList();
     this.getRelationList();
+    if (!!this.$route.query.chooseID) {
+      const chooseIDs = JSON.parse(this.$route.query.chooseID);
+      // console.log(this.$refs);
+      // this.$refs.multipleTable.toggleRowSelection(
+      //   this.tableData.filter((res) => chooseIDs.includes(res.id))
+      // );
+      // console.log(this.multipleSelection);
+    }
   },
 };
 </script>

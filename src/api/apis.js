@@ -48,7 +48,7 @@ const api = {
   },
 
   //  關鍵字分析
-   getKeyWord(data) {
+  getKeyWord(data) {
     return req("post", "KeyWord/getKeyWord", data);
   },
 
@@ -73,7 +73,7 @@ const api = {
   deleteTermInfo(data) {
     return req("post", "TermInfo/deleteTermInfo", data);
   },
-  
+
   // 專卷分類
   /* 新增 */
   addUserTopic(data) {
@@ -95,6 +95,12 @@ const api = {
   },
   /* 修改 */
   /* 刪除 */
+
+  // 專卷編輯
+  /* 新增 */
+  addDataTopic(data) {
+    return req("post", "UserTopic/addData2Topic", data)
+  }
 };
 
 export default api;

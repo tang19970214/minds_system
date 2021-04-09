@@ -111,11 +111,12 @@ export default {
     },
     /* 換頁鈕 */
     handleSizeChange(val) {
-      console.log(val);
+      this.$store.dispatch("loadingHandler", true);
       this.listQuery.pageSize = val;
       this.getList();
     },
     handleCurrentChange(val) {
+      this.$store.dispatch("loadingHandler", true);
       this.listQuery.page = val;
       this.getList();
     },

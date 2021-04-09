@@ -7,16 +7,20 @@ import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 
-// var VueScrollTo = require('vue-scrollto')
+import { library } from "@fortawesome/fontawesome-svg-core"
+import { fas } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
 
-import './assets/all.scss';
+import './assets/all.scss'
 import api from "@/api/apis.js"
+
+library.add(fas)
 
 Vue.config.productionTip = false
 Vue.use(ElementUI)
 Vue.use(VueAxios, axios)
 Vue.use(require('vue-moment'))
-// Vue.use(VueScrollTo)
+Vue.component("font-awesome-icon", FontAwesomeIcon)
 
 Vue.prototype.$api = api
 

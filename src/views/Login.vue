@@ -1,27 +1,27 @@
 <template>
-  <div id="login">
-    <div class="loginCard">
-      <div class="loginCard__title">
+  <div class="login">
+    <div class="login__header">
+      <div class="login__header--title">
         <img src="@/assets/images/logo.png" alt="logo" width="180px">
         <strong>MS智能語意分析系統</strong>
       </div>
+    </div>
 
-      <div class="loginCard__form">
-        <div class="loginCard__form--infoCard">
-          <div class="flex align-center justify-center">
-            <label>帳號：</label>
-            <input type="text" v-model="userInfo.account" placeholder="請輸入帳號">
-          </div>
-          <div class="flex align-center justify-center">
-            <label>密碼：</label>
-            <input type="password" v-model="userInfo.password" placeholder="請輸入密碼">
-          </div>
-          <button @click="login">登入</button>
+    <div class="login__func">
+      <div class="login__func--infoCard">
+        <div class="flex align-center justify-center">
+          <label>帳號：</label>
+          <input type="text" v-model="userInfo.account" placeholder="請輸入帳號">
         </div>
+        <div class="flex align-center justify-center">
+          <label>密碼：</label>
+          <input type="password" v-model="userInfo.password" placeholder="請輸入密碼">
+        </div>
+        <button @click="login">登入</button>
       </div>
     </div>
 
-    <div class="loginCard__footer">
+    <div class="footer">
       <p>Copyright © 2020 minds Corporation.</p>
     </div>
   </div>
@@ -84,24 +84,33 @@ export default {
 </script>
 
 <style lang="scss">
-#login {
+.login {
   position: relative;
   width: 100vw;
   height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-direction: column;
   background: linear-gradient(-45deg, transparent 55%, #191972 0) right,
     linear-gradient(45deg, transparent 15px, #00abb9 0) left;
 
-  .loginCard {
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
+
+  &__header {
     width: 100%;
     height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
 
-    &__title {
+    &--title {
       width: 100%;
-      padding: 40px;
-      box-sizing: border-box;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
 
       strong {
         font-size: 36px;
@@ -109,72 +118,86 @@ export default {
         color: white;
       }
     }
+  }
 
-    &__form {
+  &__func {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+
+    @media (min-width: 450px) {
+      align-items: center;
+    }
+
+    &--infoCard {
       width: 100%;
-      padding: 40px 200px;
-      box-sizing: border-box;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: center;
+      flex-direction: column;
 
-      &--infoCard {
-        width: 400px;
-        background: transparent;
+      div {
+        margin-bottom: 30px;
+        display: flex;
+        flex-direction: column;
 
-        div {
-          margin-bottom: 30px;
-
-          label {
-            min-width: 100px;
-            max-width: 100px;
-            font-size: 20px;
-            color: white;
-            letter-spacing: 10px;
-          }
-
-          input {
-            width: 300px;
-            border: none;
-            padding: 8px;
-            font-size: 16px;
-            letter-spacing: 0.2rem;
-          }
+        @media (min-width: 450px) {
+          flex-direction: row;
         }
 
-        button {
-          width: 100%;
-          background: #191972;
-          padding: 4px;
-          border-radius: 8px;
+        label {
+          min-width: 100px;
+          max-width: 100px;
           font-size: 20px;
           color: white;
-          font-weight: bold;
-          letter-spacing: 5px;
-          transition: 0.6s;
-          cursor: pointer;
+          letter-spacing: 10px;
+        }
 
-          &:hover {
-            background: #dfdff5;
-            border: 3px solid #191972;
-            color: #191972;
-          }
+        input {
+          width: 300px;
+          border: none;
+          padding: 8px;
+          font-size: 16px;
+          letter-spacing: 0.2rem;
+        }
+      }
+
+      button {
+        width: calc(100% - 20px);
+        max-width: 400px;
+        background: #191972;
+        padding: 4px;
+        border-radius: 8px;
+        font-size: 20px;
+        color: white;
+        font-weight: bold;
+        letter-spacing: 5px;
+        transition: 0.6s;
+        cursor: pointer;
+
+        &:hover {
+          background: #dfdff5;
+          border: 3px solid #191972;
+          color: #191972;
         }
       }
     }
+  }
 
-    &__footer {
-      position: absolute;
-      bottom: 1rem;
-      width: 100%;
-      text-align: center;
+  .footer {
+    position: absolute;
+    bottom: 1rem;
+    width: 100%;
+    text-align: center;
 
-      p {
-        margin-bottom: 0;
-        font-size: 18px;
-        color: white;
-        letter-spacing: 2.5px;
-      }
+    p {
+      margin-bottom: 0;
+      font-size: 18px;
+      color: white;
+      letter-spacing: 2.5px;
     }
   }
 }

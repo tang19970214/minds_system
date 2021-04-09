@@ -64,7 +64,7 @@ export default {
     return {
       openSearchBox: true,
       //   listQuery: {
-      //     UserId: 3,
+      //     UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
       //     TopicId: 16,
       //     Page: 1,
       //     PageSize: 10,
@@ -95,17 +95,21 @@ export default {
     // },
     /* 獲取專卷資料 */
     async getList() {
-      await this.$api.getUserTopic({ UserId: 3 }).then((res) => {
-        this.sortList = res.data.filter((resp) => resp.pid == null);
-        const childrenList = res.data.filter((sup) => sup.pid !== null);
-        this.themeList = this.sortList.map((p) => {
-          p.children = childrenList.filter((c) => {
-            return c.pid === p.id;
+      await this.$api
+        .getUserTopic({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        })
+        .then((res) => {
+          this.sortList = res.data.filter((resp) => resp.pid == null);
+          const childrenList = res.data.filter((sup) => sup.pid !== null);
+          this.themeList = this.sortList.map((p) => {
+            p.children = childrenList.filter((c) => {
+              return c.pid === p.id;
+            });
+            return p;
           });
-          return p;
+          this.$store.dispatch("loadingHandler", false);
         });
-        this.$store.dispatch("loadingHandler", false);
-      });
     },
     openRelationAnalysis() {
       let routeUrl = this.$router.resolve({ name: "relationAnalysis" });
