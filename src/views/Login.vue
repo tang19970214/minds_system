@@ -50,17 +50,16 @@ export default {
         if (res.data.message == null) {
           this.setUserInfo(res.data);
           this.setUniMenu();
-          this.$message({
-            showClose: true,
-            type: "success",
+          this.$notify({
+            title: "成功",
             message: "登入成功!",
+            type: "success",
           });
           this.$store.dispatch("loadingHandler", false);
           this.$router.push("/Home");
         } else {
-          this.$message({
-            showClose: true,
-            type: "error",
+          this.$notify.error({
+            title: "錯誤",
             message: res.data.message,
           });
           this.userInfo = {};

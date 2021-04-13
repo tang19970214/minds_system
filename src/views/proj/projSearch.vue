@@ -16,8 +16,8 @@
 
         <div class="projSearch__searchBox--theme">
           <label>專卷主題：</label>
-          <el-select v-model="projTheme" placeholder="請選擇專卷主題" v-if="getChild(themeList).length > 0" no-data-text="無數據">
-            <el-option :label="item.name" :value="item.name" v-for="item in getChild(themeList)[0].children" :key="item.id"></el-option>
+          <el-select v-model="projTheme" placeholder="請選擇專卷主題" @change="getProjTheme" v-if="getChild(themeList).length > 0" no-data-text="無數據">
+            <el-option :label="item.name" :value="item.id" v-for="item in getChild(themeList)[0].children" :key="item.id"></el-option>
           </el-select>
           <el-select v-model="projTheme" placeholder="請先選擇專卷分類" :disabled="!projSort" v-else></el-select>
         </div>
@@ -38,21 +38,15 @@
       </div>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50">
+        <el-table-column type="selection" width="50"></el-table-column>
+        <el-table-column label="序號" type="index" width="50"></el-table-column>
+        <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
+        <el-table-column label="新聞時間" width="180">
+          <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
         </el-table-column>
-        <el-table-column label="序號" type="index" width="50">
-        </el-table-column>
-        <el-table-column label="新聞標題" prop="newsTitle">
-        </el-table-column>
-        <el-table-column label="新聞時間" width="150">
-          <!-- <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template> -->
-        </el-table-column>
-        <el-table-column label="新聞網站" prop="newsUrl">
-        </el-table-column>
-        <el-table-column label="新聞頻道" prop="newsChannel" width="100">
-        </el-table-column>
-        <el-table-column label="情緒指標" prop="sentiment" width="100">
-        </el-table-column>
+        <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
+        <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
+        <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
       </el-table>
     </div>
   </div>
@@ -87,12 +81,12 @@ export default {
     },
   },
   methods: {
-    // getList() {
-    //   this.$api.getDataByTopicId(this.listQuery).then((res) => {
-    //     console.log(res.data);
-    //     this.tableData = res.data;
-    //   });
-    // },
+    async getTableData(obj) {
+      await this.$api.getDataByTopicId(obj).then((res) => {
+        this.tableData = res.data;
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
     /* 獲取專卷資料 */
     async getList() {
       await this.$api
@@ -110,6 +104,17 @@ export default {
           });
           this.$store.dispatch("loadingHandler", false);
         });
+    },
+    /* 獲取專卷主題 */
+    getProjTheme(val) {
+      this.$store.dispatch("loadingHandler", true);
+      const listQuery = {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        TopicId: val,
+        Page: 1,
+        PageSize: 10,
+      };
+      this.getTableData(listQuery);
     },
     openRelationAnalysis() {
       let routeUrl = this.$router.resolve({ name: "relationAnalysis" });

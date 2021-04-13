@@ -6,13 +6,15 @@
         <div class="body" v-if="openLeftBox">
           <div class="body__projSort">
             <strong>專卷分類：</strong>
-            <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
-              <el-option label="請選擇" value=""></el-option>
-              <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
-            </el-select>
-            <el-tooltip effect="dark" content="新增專卷分類" placement="bottom">
-              <i class="el-icon-plus" @click="openAddProjSort = true"></i>
-            </el-tooltip>
+            <div class="body__projSort--func">
+              <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
+                <el-option label="請選擇" value=""></el-option>
+                <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
+              </el-select>
+              <el-tooltip effect="dark" content="新增專卷分類" placement="bottom">
+                <i class="el-icon-plus" @click="openAddProjSort = true"></i>
+              </el-tooltip>
+            </div>
           </div>
 
           <div class="body__addTheme">
@@ -22,12 +24,12 @@
             </span>
           </div>
           <div class="body__projTheme">
-            <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" style="width: 100%" border empty-text="暫無數據">
-              <el-table-column prop="id" label="序號" width="60px"></el-table-column>
-              <el-table-column prop="name" label="專卷主題"></el-table-column>
-              <el-table-column fixed="right" label="操作" width="100">
+            <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" align="center" style="width: 100%" border empty-text="暫無數據">
+              <el-table-column label="專卷主題">
                 <template slot-scope="scope">
-                  <el-button @click="chooseTheme(scope.row.name)" type="text" size="small" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">選擇</el-button>
+                  <el-button @click="chooseTheme(scope.row.name)" type="text" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">
+                    <b :class="{'body__projTheme--active':relationList[relationList.length - 1].label == scope.row.name}">{{scope.row.name}}</b>
+                  </el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -234,7 +236,8 @@ export default {
       listNum: null,
       multipleSelection: [],
 
-      relationValue: [1, 2],
+      relationValue: [],
+      copyRelationValue: [],
       relationList: [],
       leftRelationIds: [],
     };
@@ -292,6 +295,7 @@ export default {
       });
       this.relationList = chooseData;
       this.relationValue = chooseIDX;
+      this.copyRelationValue = chooseIDX;
       // console.log(this.relationList, this.relationValue);
     },
     /* 獲取所選專卷分類 */
@@ -315,7 +319,8 @@ export default {
       this.getRelationList();
     },
     /* 選擇專卷主題並帶入現有分析內容 */
-    chooseTheme(val) {
+    async chooseTheme(val) {
+      this.$store.dispatch("loadingHandler", true);
       /* 檢查是否已選擇主題 */
       const checkTheme = this.relationList.filter((res) => res.value == "主題");
       const getNews = this.relationList.filter((resp) => resp.value !== "主題");
@@ -343,6 +348,24 @@ export default {
         item.disabled = false;
         return item;
       });
+
+      const topicQuery = {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+        TopicId: getTheme.id,
+        Page: 1,
+        PageSize: 10,
+      };
+      await this.$api.getDataByTopicId(topicQuery).then((res) => {
+        if (res.data.length > 0) {
+          const getSaveIds = res.data.map((item) => item.newsId);
+          this.relationValue = this.relationValue.filter(
+            (i) => !getSaveIds.includes(i)
+          );
+        } else {
+          this.relationValue = this.copyRelationValue;
+        }
+        this.$store.dispatch("loadingHandler", false);
+      });
     },
     /* 新增專卷分類 */
     addSort() {
@@ -361,8 +384,8 @@ export default {
           };
           this.$api.addUserTopic(sortQuery).then((res) => {
             if (res.data) {
-              this.$message({
-                showClose: true,
+              this.$notify({
+                title: "成功",
                 message: "新增成功！",
                 type: "success",
               });
@@ -378,8 +401,8 @@ export default {
       if (!!this.searchSort) {
         this.openAddProjTheme = true;
       } else {
-        this.$message({
-          showClose: true,
+        this.$notify({
+          title: "警告",
           message: "請先選擇『專卷分類』！",
           type: "warning",
         });
@@ -410,8 +433,8 @@ export default {
               // this.searchSort = "";
               this.rightBoxData = {};
               this.openAddProjTheme = false;
-              this.$message({
-                showClose: true,
+              this.$notify({
+                title: "成功",
                 message: "新增成功！",
                 type: "success",
               });
@@ -429,51 +452,54 @@ export default {
     },
     /* 儲存鈕 */
     saveTopic() {
-      // const checkValue = this.relationList.filter(
-      //   (i) => !this.relationValue.includes(i.key)
-      // );
-      // console.log(checkValue);
-      // if (checkValue.length > 0) {
-      // } else {
-
-      // }
-      // return;
-      this.$confirm("確定要儲存嗎？", "提示", {
-        confirmButtonText: "確定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          this.$store.dispatch("loadingHandler", true);
-          const getTopicId = this.leftRelationIds[
-            this.leftRelationIds.length - 1
-          ];
-          const getNewsIds = this.leftRelationIds.filter(
-            (n, i) => i !== this.leftRelationIds.length - 1
-          );
-          const topicQuery = {
-            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-            TopicId: getTopicId,
-            NewsId: getNewsIds,
-          };
-          this.$api.addDataTopic(topicQuery).then((res) => {
-            if (res.data) {
-              this.$notify({
-                title: "成功",
-                message: "儲存成功！",
-                type: "success",
-              });
-            } else {
-              this.$message({
-                showClose: true,
-                message: "未知的錯誤，請重新操作！",
-                type: "error",
-              });
-            }
-            this.$store.dispatch("loadingHandler", false);
-          });
+      const checkValue = this.relationList.filter(
+        (i) => !this.relationValue.includes(i.key)
+      );
+      if (checkValue.length > 0) {
+        this.$confirm("確定要儲存嗎？", "提示", {
+          confirmButtonText: "確定",
+          cancelButtonText: "取消",
+          type: "warning",
         })
-        .catch(() => {});
+          .then(() => {
+            this.$store.dispatch("loadingHandler", true);
+            const getTopicId = this.leftRelationIds[
+              this.leftRelationIds.length - 1
+            ];
+            const getNewsIds = this.leftRelationIds.filter(
+              (n, i) => i !== this.leftRelationIds.length - 1
+            );
+            const topicQuery = {
+              UserId: JSON.parse(window.localStorage.getItem("userInfo"))
+                .userId,
+              TopicId: getTopicId,
+              NewsId: getNewsIds,
+            };
+            this.$api.addDataTopic(topicQuery).then((res) => {
+              if (res.data) {
+                this.$notify({
+                  title: "成功",
+                  message: "儲存成功！",
+                  type: "success",
+                });
+              } else {
+                this.$notify.error({
+                  title: "錯誤",
+                  message: "未知的錯誤，請重新操作！",
+                });
+              }
+              this.$store.dispatch("loadingHandler", false);
+            });
+          })
+          .catch(() => {});
+      } else {
+        this.$notify({
+          title: "警告",
+          message: "現有分析內容無資料！",
+          type: "warning",
+        });
+      }
+      return;
     },
 
     // 搜尋關聯分析內容modal
@@ -537,8 +563,8 @@ export default {
         this.openSearchRelation = false;
         this.$store.dispatch("loadingHandler", false);
       } else {
-        this.$message({
-          showClose: true,
+        this.$notify({
+          title: "警告",
           message: "請至少選擇一筆資料！",
           type: "warning",
         });
@@ -572,8 +598,9 @@ export default {
   position: relative;
 
   &__leftBox {
-    width: 25%;
+    width: 250px;
     height: 100%;
+    background: #191970;
     display: flex;
     align-items: flex-start;
     border-right: 1px solid black;
@@ -583,14 +610,22 @@ export default {
       min-height: 100vh;
       padding: 12px;
       box-sizing: border-box;
-      border-right: 1px solid black;
+      border-right: 1px solid white;
 
       &__projSort {
         width: 100%;
         display: flex;
-        align-items: center;
-        justify-content: space-around;
-        color: #191970;
+        align-items: flex-start;
+        flex-direction: column;
+        color: white;
+
+        &--func {
+          width: 100%;
+          padding: 16px 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
 
         .el-select {
           width: 150px !important;
@@ -598,6 +633,7 @@ export default {
 
         i {
           font-weight: bolder;
+          color: white;
           font-size: 24px;
           transition: 0.5s;
           cursor: pointer;
@@ -610,7 +646,6 @@ export default {
 
       &__addTheme {
         width: 100%;
-        padding-top: 36px;
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -623,7 +658,7 @@ export default {
             padding: 0 2px;
             font-size: 18px;
             font-weight: bold;
-            color: #191972;
+            color: white;
           }
 
           &:hover {
@@ -635,20 +670,37 @@ export default {
       &__projTheme {
         width: 100%;
         padding-top: 32px;
+
+        b {
+          color: #191970;
+          font-size: 18px;
+          transition: 0.4s;
+
+          &:hover {
+            color: #00abb9;
+            letter-spacing: 2px;
+          }
+        }
+
+        &--active {
+          color: #00abb9 !important;
+        }
       }
     }
 
     &--shrinkLeftBox {
       width: 5%;
       min-height: 100vh;
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
 
       i {
-        padding: 8px 0;
+        padding: 16px 0;
         font-weight: bolder;
-        font-size: 24px;
+        font-size: 20px;
+        transition: 0.4s;
         cursor: pointer;
 
         &:hover {
@@ -659,7 +711,7 @@ export default {
   }
 
   &__rightBox {
-    width: 75%;
+    width: calc(100% - 250px);
     height: 100%;
 
     &--infoBox {

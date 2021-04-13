@@ -109,12 +109,12 @@ export default {
     return {
       allUserList: [],
       openSearchBox: true,
-      listQuery: {
-        UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
-        TopicId: 16,
-        Page: 1,
-        PageSize: 10,
-      },
+      // listQuery: {
+      //   UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+      //   TopicId: 16,
+      //   Page: 1,
+      //   PageSize: 10,
+      // },
       tableData: [],
       multipleSelection: [],
       /* 專卷分類 */
@@ -163,13 +163,14 @@ export default {
   },
   methods: {
     /* 獲取comId下所有使用者(用於篩選建立人ID) */
-    getUser() {
-      this.$api
+    async getUser() {
+      await this.$api
         .getUserList({
           ComId: JSON.parse(window.localStorage.getItem("userInfo")).comId,
         })
         .then((res) => {
           this.allUserList = res.data;
+          this.$store.dispatch("loadingHandler", false);
         });
     },
     /* 獲取專卷資料 */
@@ -190,8 +191,14 @@ export default {
         });
     },
     /* 獲取表格資料 */
-    async getList() {
-      await this.$api.getDataByTopicId(this.listQuery).then((res) => {
+    async getList(topicId) {
+      const listQuery = {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
+        TopicId: topicId,
+        Page: 1,
+        PageSize: 10,
+      };
+      await this.$api.getDataByTopicId(listQuery).then((res) => {
         this.tableData = res.data;
         this.$store.dispatch("loadingHandler", false);
       });
@@ -207,8 +214,8 @@ export default {
             this.projSortModal = true;
             this.projSortList.name = this.projSort;
           } else {
-            this.$message({
-              showClose: true,
+            this.$notify({
+              title: "警告",
               message: "請先選擇欲修改之專卷分類！",
               type: "warning",
             });
@@ -234,9 +241,9 @@ export default {
               })
               .catch(() => {});
           } else {
-            this.$message({
-              showClose: true,
-              message: "請先選擇欲修改之專卷分類！",
+            this.$notify({
+              title: "警告",
+              message: "請先選擇欲刪除之專卷分類！",
               type: "warning",
             });
           }
@@ -262,8 +269,8 @@ export default {
             this.projSortModal = false;
             this.projSort = "";
             this.getProjSort();
-            this.$message({
-              showClose: true,
+            this.$notify({
+              title: "成功",
               message: "新增成功！",
               type: "success",
             });
@@ -292,8 +299,8 @@ export default {
           };
           this.$api.updateUserTopic(editList).then((res) => {
             if (res.data) {
-              this.$message({
-                showClose: true,
+              this.$notify({
+                title: "成功",
                 message: "修改成功！",
                 type: "success",
               });
@@ -322,8 +329,8 @@ export default {
       };
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
-          this.$message({
-            showClose: true,
+          this.$notify({
+            title: "成功",
             message: "已成功刪除！",
             type: "success",
           });
@@ -352,8 +359,8 @@ export default {
               remark: getChild.memo,
             };
           } else {
-            this.$message({
-              showClose: true,
+            this.$notify({
+              title: "警告",
               message: "請先選擇欲修改之專卷主題！",
               type: "warning",
             });
@@ -365,8 +372,8 @@ export default {
             this.projThemeModalTitle = "新增";
             this.projThemeModal = true;
           } else {
-            this.$message({
-              showClose: true,
+            this.$notify({
+              title: "警告",
               message: "請先選擇專卷分類！",
               type: "warning",
             });
@@ -388,8 +395,8 @@ export default {
               })
               .catch(() => {});
           } else {
-            this.$message({
-              showClose: true,
+            this.$notify({
+              title: "警告",
               message: "請先選擇欲刪除之專卷主題！",
               type: "warning",
             });
@@ -420,8 +427,8 @@ export default {
               this.projThemeModal = false;
               this.projTheme = "";
               this.getProjSort();
-              this.$message({
-                showClose: true,
+              this.$notify({
+                title: "成功",
                 message: "新增成功！",
                 type: "success",
               });
@@ -458,8 +465,8 @@ export default {
               this.projThemeModal = false;
               this.projTheme = "";
               this.getProjSort();
-              this.$message({
-                showClose: true,
+              this.$notify({
+                title: "成功",
                 message: "修改成功！",
                 type: "success",
               });
@@ -483,8 +490,8 @@ export default {
       };
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
-          this.$message({
-            showClose: true,
+          this.$notify({
+            title: "成功",
             message: "修改成功！",
             type: "success",
           });
@@ -502,6 +509,7 @@ export default {
     },
     // 獲取所選專卷主題之資料
     getThemeItem(val) {
+      this.$store.dispatch("loadingHandler", true);
       // 撈取子層資料帶入modal輸入框
       const getFather = this.sortList.filter(
         (res) => res.name == this.projSort
@@ -509,6 +517,7 @@ export default {
       this.projThemeInfo = getFather.children.filter(
         (resp) => resp.name == this.projTheme
       )[0];
+      this.getList(this.projThemeInfo.id);
     },
 
     toggleSelection(rows) {
@@ -528,7 +537,7 @@ export default {
     this.$store.dispatch("loadingHandler", true);
     this.getUser();
     this.getProjSort();
-    this.getList();
+    // this.getList();
   },
 };
 </script>

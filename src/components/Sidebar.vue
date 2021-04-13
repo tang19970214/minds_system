@@ -83,10 +83,10 @@ export default {
             if (res.data) {
               window.localStorage.removeItem("userInfo");
               window.localStorage.removeItem("menu");
-              this.$message({
-                showClose: true,
-                type: "success",
+              this.$notify({
+                title: "成功",
                 message: "您已成功登出!",
+                type: "success",
               });
               this.$router.push({ name: "login" });
             }
