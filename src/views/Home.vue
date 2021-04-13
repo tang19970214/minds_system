@@ -133,6 +133,7 @@ export default {
         window.open(routeUrl.href, "_blank");
       } else {
         this.$message({
+          showClose: true,
           message: "請至少選擇一筆資料",
           type: "warning",
         });

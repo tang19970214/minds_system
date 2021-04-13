@@ -51,13 +51,18 @@ export default {
           this.setUserInfo(res.data);
           this.setUniMenu();
           this.$message({
+            showClose: true,
             type: "success",
             message: "登入成功!",
           });
           this.$store.dispatch("loadingHandler", false);
           this.$router.push("/Home");
         } else {
-          this.$message.error(res.data.message);
+          this.$message({
+            showClose: true,
+            type: "error",
+            message: res.data.message,
+          });
           this.userInfo = {};
         }
       });

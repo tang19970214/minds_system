@@ -84,6 +84,7 @@ export default {
               window.localStorage.removeItem("userInfo");
               window.localStorage.removeItem("menu");
               this.$message({
+                showClose: true,
                 type: "success",
                 message: "您已成功登出!",
               });

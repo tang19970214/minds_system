@@ -208,6 +208,7 @@ export default {
             this.projSortList.name = this.projSort;
           } else {
             this.$message({
+              showClose: true,
               message: "請先選擇欲修改之專卷分類！",
               type: "warning",
             });
@@ -234,6 +235,7 @@ export default {
               .catch(() => {});
           } else {
             this.$message({
+              showClose: true,
               message: "請先選擇欲修改之專卷分類！",
               type: "warning",
             });
@@ -261,6 +263,7 @@ export default {
             this.projSort = "";
             this.getProjSort();
             this.$message({
+              showClose: true,
               message: "新增成功！",
               type: "success",
             });
@@ -290,6 +293,7 @@ export default {
           this.$api.updateUserTopic(editList).then((res) => {
             if (res.data) {
               this.$message({
+                showClose: true,
                 message: "修改成功！",
                 type: "success",
               });
@@ -314,11 +318,12 @@ export default {
       }
       const delList = {
         UserId: getData.userId,
-        Ids: [getID],
+        Ids: getID,
       };
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
           this.$message({
+            showClose: true,
             message: "已成功刪除！",
             type: "success",
           });
@@ -348,6 +353,7 @@ export default {
             };
           } else {
             this.$message({
+              showClose: true,
               message: "請先選擇欲修改之專卷主題！",
               type: "warning",
             });
@@ -360,6 +366,7 @@ export default {
             this.projThemeModal = true;
           } else {
             this.$message({
+              showClose: true,
               message: "請先選擇專卷分類！",
               type: "warning",
             });
@@ -382,6 +389,7 @@ export default {
               .catch(() => {});
           } else {
             this.$message({
+              showClose: true,
               message: "請先選擇欲刪除之專卷主題！",
               type: "warning",
             });
@@ -413,6 +421,7 @@ export default {
               this.projTheme = "";
               this.getProjSort();
               this.$message({
+                showClose: true,
                 message: "新增成功！",
                 type: "success",
               });
@@ -450,6 +459,7 @@ export default {
               this.projTheme = "";
               this.getProjSort();
               this.$message({
+                showClose: true,
                 message: "修改成功！",
                 type: "success",
               });
@@ -474,6 +484,7 @@ export default {
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
           this.$message({
+            showClose: true,
             message: "修改成功！",
             type: "success",
           });

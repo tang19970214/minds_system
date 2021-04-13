@@ -362,6 +362,7 @@ export default {
           this.$api.addUserTopic(sortQuery).then((res) => {
             if (res.data) {
               this.$message({
+                showClose: true,
                 message: "新增成功！",
                 type: "success",
               });
@@ -378,6 +379,7 @@ export default {
         this.openAddProjTheme = true;
       } else {
         this.$message({
+          showClose: true,
           message: "請先選擇『專卷分類』！",
           type: "warning",
         });
@@ -387,6 +389,7 @@ export default {
     addTheme() {
       this.$refs.ruleForm_addProjTheme.validate((valid) => {
         if (valid) {
+          this.$store.dispatch("loadingHandler", true);
           const getData = this.projSortList.filter(
             (res) => res.name == this.searchSort
           )[0];
@@ -404,13 +407,15 @@ export default {
           this.$api.addUserTopic(sortQuery).then((res) => {
             if (res.data) {
               this.getProjSortList();
-              this.searchSort = "";
+              // this.searchSort = "";
               this.rightBoxData = {};
               this.openAddProjTheme = false;
               this.$message({
+                showClose: true,
                 message: "新增成功！",
                 type: "success",
               });
+              this.$store.dispatch("loadingHandler", false);
             }
           });
         }
@@ -424,6 +429,15 @@ export default {
     },
     /* 儲存鈕 */
     saveTopic() {
+      // const checkValue = this.relationList.filter(
+      //   (i) => !this.relationValue.includes(i.key)
+      // );
+      // console.log(checkValue);
+      // if (checkValue.length > 0) {
+      // } else {
+
+      // }
+      // return;
       this.$confirm("確定要儲存嗎？", "提示", {
         confirmButtonText: "確定",
         cancelButtonText: "取消",
@@ -450,7 +464,11 @@ export default {
                 type: "success",
               });
             } else {
-              this.$message.error("未知的錯誤，請重新操作！");
+              this.$message({
+                showClose: true,
+                message: "未知的錯誤，請重新操作！",
+                type: "error",
+              });
             }
             this.$store.dispatch("loadingHandler", false);
           });
@@ -520,6 +538,7 @@ export default {
         this.$store.dispatch("loadingHandler", false);
       } else {
         this.$message({
+          showClose: true,
           message: "請至少選擇一筆資料！",
           type: "warning",
         });
