@@ -65,6 +65,10 @@ const api = {
   getTermTypeList(data) {
     return req("post", "TermType/getTermTypeList", data);
   },
+  /* 獲取實體詞 */
+  getEntityTypeList(data) {
+    return req("post", "TermType/getEntityTypeList", data);
+  },
   /* 新增 */
   addTermInfo(data) {
     return req("post", "TermInfo/addTermInfo", data);

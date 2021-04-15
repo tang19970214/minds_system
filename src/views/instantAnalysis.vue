@@ -1,6 +1,6 @@
 <template>
   <div class="instantAnalysis">
-    <div class="instantAnalysis__setting">
+    <div class="instantAnalysis__setting" @click="enterAnalysis = true">
       <strong>請輸入分析資料</strong>
     </div>
 
@@ -16,63 +16,37 @@
 
         <el-col :span="10">
           <div class="instantAnalysis__card--collapse">
-            <el-collapse class="w-full" v-model="activeName" accordion>
-              <el-collapse-item title="國家" name="1">
-                <div v-if="!!collapseList">
-                  <div class="collapseTag" v-if="collapseList.Nation.length > 0">
-                    <span class="collapseTag__tag" v-for="(item, idx1) in collapseList.Nation" :key="idx1">{{item.w}}</span>
+            <div class="detailPage" v-if="!!collapseList">
+              <div class="detailPage__tagBox" v-for="item in tagGroup" :key="item.id">
+                <div class="detailPage__tagBox--header" :style="{background: getBG(item.id)}">
+                  <strong>{{item.title}}</strong>
+                  <i class="el-icon-plus"></i>
+                </div>
+                <div class="detailPage__tagBox--body">
+                  <div v-if="collapseList[item.value].length > 0">
+                    <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
+                      <strong v-if="item.value == 'Nation'">{{items.w}}</strong>
+                      <strong v-else-if="item.value == 'TitlePeople'">{{items.para}}</strong>
+                    </el-tag>
                   </div>
                   <div v-else>
-                    <strong>無資料</strong>
+                    <p class="noData">無資料</p>
                   </div>
                 </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </el-collapse-item>
+              </div>
+            </div>
 
-              <el-collapse-item title="地點" name="2">
-                <div v-if="!!collapseList">
-                  <div class="collapseTag" v-if="collapseList.Place.length > 0">
-                    <span class="collapseTag__tag" v-for="(item, idx1) in collapseList.Place" :key="idx1">{{item.w}}</span>
-                  </div>
-                  <div v-else>
-                    <strong>無資料</strong>
-                  </div>
+            <div class="detailPage" v-else>
+              <div class="detailPage__tagBox" v-for="item in tagGroup" :key="item.id">
+                <div class="detailPage__tagBox--header" :style="{background: getBG(item.id)}">
+                  <strong>{{item.title}}</strong>
+                  <i class="el-icon-plus"></i>
                 </div>
-                <div v-else>
-                  <strong>無資料</strong>
+                <div class="detailPage__tagBox--body">
+                  <p class="noData">無資料</p>
                 </div>
-              </el-collapse-item>
-
-              <el-collapse-item title="人名" name="3">
-                <div v-if="!!collapseList">
-                  <div class="collapseTag" v-if="collapseList.TitlePeople.length > 0">
-                    <span class="collapseTag__tag" v-for="(item, idx1) in collapseList.TitlePeople" :key="idx1">{{item.para}}</span>
-                  </div>
-                  <div v-else>
-                    <strong>無資料</strong>
-                  </div>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </el-collapse-item>
-
-              <el-collapse-item title="組織" name="4">
-                <div v-if="!!collapseList">
-                  <div class="collapseTag" v-if="collapseList.Org.length > 0">
-                    <span class="collapseTag__tag" v-for="(item, idx1) in collapseList.Org" :key="idx1">{{item.w}}</span>
-                  </div>
-                  <div v-else>
-                    <strong>無資料</strong>
-                  </div>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </el-collapse-item>
-            </el-collapse>
+              </div>
+            </div>
           </div>
         </el-col>
       </el-row>
@@ -101,10 +75,40 @@ export default {
         data: "從川普到拜登！台美關係持續友好　美國官員訪台層級不斷提高",
         param: "BizNews",
       },
+      tagGroup: [
+        { id: 1, title: "國家", value: "Nation" },
+        { id: 2, title: "地點", value: "Place" },
+        { id: 3, title: "人名", value: "TitlePeople" },
+        { id: 4, title: "組織", value: "Org" },
+      ],
+
       collapseList: null,
       enterAnalysis: false,
     };
   },
+  computed: {
+    getBG() {
+      return (id) => {
+        let setBG = "";
+        switch (id) {
+          case 1:
+            setBG = "#FFFFCE";
+            break;
+          case 2:
+            setBG = "#FFD9EC";
+            break;
+          case 3:
+            setBG = "#BBFFBB";
+            break;
+          case 4:
+            setBG = "#BBFFFF";
+            break;
+        }
+        return setBG;
+      };
+    },
+  },
+
   methods: {
     getList() {
       this.$api
@@ -178,6 +182,60 @@ export default {
       display: flex;
       align-items: flex-start;
       justify-content: center;
+
+      .detailPage {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+
+        &__tagBox {
+          width: 100%;
+          border: 1px solid #eee;
+          border-radius: 4px;
+          margin-bottom: 8px;
+          box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+
+          &:last-child {
+            margin: 0;
+          }
+
+          &--header {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #191970;
+
+            i {
+              font-weight: bold;
+              color: #191970;
+            }
+          }
+
+          &--body {
+            width: 100%;
+            padding: 8px 8px 4px 8px;
+            box-sizing: border-box;
+
+            .el-tag {
+              margin: 0 4px 4px 0;
+
+              &:last-child {
+                margin-right: 0;
+              }
+            }
+
+            .noData {
+              padding-bottom: 4px;
+              margin: 0;
+              font-size: 13px;
+            }
+          }
+        }
+      }
 
       .el-collapse-item__header {
         &:nth-child(1) {

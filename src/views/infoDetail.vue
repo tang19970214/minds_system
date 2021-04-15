@@ -15,75 +15,24 @@
       </el-col>
 
       <el-col :span="8">
-        <div class="detailPage__rightBox">
+        <div class="detailPage__rightBox" v-if="!!collapseList">
           <div class="detailPage__rightBox--tagBox" v-for="item in tagGroup" :key="item.id">
-            <div class="header">
+            <div class="header" :style="{background: getBG(item.id)}">
               <strong>{{item.title}}</strong>
               <i class="el-icon-plus"></i>
             </div>
             <div class="body">
-              <el-tag type="info" v-for="item in 13" :key="item">菜菜</el-tag>
+              <div v-if="collapseList[item.value].length > 0">
+                <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
+                  <strong v-if="item.value == 'Nation'">{{items.w}}</strong>
+                  <strong v-else-if="item.value == 'TitlePeople'">{{items.para}}</strong>
+                </el-tag>
+              </div>
+              <div v-else>
+                <p class="body__noData">無資料</p>
+              </div>
             </div>
           </div>
-
-          <el-collapse class="w-full" v-model="activeName" accordion>
-            <el-collapse-item title="國家" name="1">
-              <div v-if="!!collapseList">
-                <div class="detailPage__rightBox--tag" v-if="collapseList.Nation.length > 0">
-                  <span class="collapseTag" v-for="(item, idx1) in collapseList.Nation" :key="idx1">{{item.w}}</span>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </div>
-              <div v-else>
-                <strong>無資料</strong>
-              </div>
-            </el-collapse-item>
-
-            <el-collapse-item title="地點" name="2">
-              <div v-if="!!collapseList">
-                <div class="detailPage__rightBox--tag" v-if="collapseList.Place.length > 0">
-                  <span class="collapseTag" v-for="(item, idx1) in collapseList.Place" :key="idx1">{{item.w}}</span>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </div>
-              <div v-else>
-                <strong>無資料</strong>
-              </div>
-            </el-collapse-item>
-
-            <el-collapse-item title="人名" name="3">
-              <div v-if="!!collapseList">
-                <div class="detailPage__rightBox--tag" v-if="collapseList.TitlePeople.length > 0">
-                  <span class="collapseTag" v-for="(item, idx1) in collapseList.TitlePeople" :key="idx1">{{item.para}}</span>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </div>
-              <div v-else>
-                <strong>無資料</strong>
-              </div>
-            </el-collapse-item>
-
-            <el-collapse-item title="組織" name="4">
-              <div v-if="!!collapseList">
-                <div class="detailPage__rightBox--tag" v-if="collapseList.Org.length > 0">
-                  <span class="collapseTag" v-for="(item, idx1) in collapseList.Org" :key="idx1">{{item.w}}</span>
-                </div>
-                <div v-else>
-                  <strong>無資料</strong>
-                </div>
-              </div>
-              <div v-else>
-                <strong>無資料</strong>
-              </div>
-            </el-collapse-item>
-
-          </el-collapse>
         </div>
       </el-col>
     </el-row>
@@ -105,38 +54,37 @@ export default {
       },
       detailList: {},
       tagGroup: [
-        { id: 1, title: "國家" },
-        { id: 2, title: "地點" },
-        { id: 3, title: "人名" },
-        { id: 4, title: "組織" },
+        { id: 1, title: "國家", value: "Nation" },
+        { id: 2, title: "地點", value: "Place" },
+        { id: 3, title: "人名", value: "TitlePeople" },
+        { id: 4, title: "組織", value: "Org" },
       ],
       collapseList: null,
       activeName: 1,
     };
   },
-  //   computed: {
-  //     getBG() {
-  //       return (id) => {
-  //         console.log(id);
-  //         let setBG = "";
-  //         switch (id) {
-  //           case 1:
-  //             setBG = "#FFFFCE";
-  //             break;
-  //           case 2:
-  //             setBG = "#FFD9EC";
-  //             break;
-  //           case 3:
-  //             setBG = "#BBFFBB";
-  //             break;
-  //           case 4:
-  //             setBG = "#BBFFFF";
-  //             break;
-  //         }
-  //         return setBG;
-  //       };
-  //     },
-  //   },
+  computed: {
+    getBG() {
+      return (id) => {
+        let setBG = "";
+        switch (id) {
+          case 1:
+            setBG = "#FFFFCE";
+            break;
+          case 2:
+            setBG = "#FFD9EC";
+            break;
+          case 3:
+            setBG = "#BBFFBB";
+            break;
+          case 4:
+            setBG = "#BBFFFF";
+            break;
+        }
+        return setBG;
+      };
+    },
+  },
   methods: {
     getList() {
       this.$api.getNewsDetail(this.listQuery).then((res) => {
@@ -242,6 +190,12 @@ export default {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          color: #191970;
+
+          i {
+            font-weight: bold;
+            color: #191970;
+          }
         }
 
         .body {
@@ -255,6 +209,12 @@ export default {
             &:last-child {
               margin-right: 0;
             }
+          }
+
+          &__noData {
+            padding-bottom: 4px;
+            margin: 0;
+            font-size: 13px;
           }
         }
       }
