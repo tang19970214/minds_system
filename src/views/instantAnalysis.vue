@@ -1,7 +1,7 @@
 <template>
   <div class="instantAnalysis">
     <div class="instantAnalysis__setting">
-      <strong>查詢設定</strong>
+      <strong>請輸入分析資料</strong>
     </div>
 
     <div class="instantAnalysis__card">
