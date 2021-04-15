@@ -18,6 +18,15 @@ const routes = [
       hideMenu: false
     }
   },
+  /* 資料詳情 */
+  {
+    path: '/infoDetail/:id',
+    name: 'infoDetail',
+    component: () => import('../views/infoDetail.vue'),
+    meta: {
+      hideMenu: true
+    }
+  },
   /* 註冊 */
   {
     path: '/login',

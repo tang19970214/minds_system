@@ -70,6 +70,13 @@ export default {
   data() {
     return {
       openSearchBox: true,
+      wordQuery: {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
+        Query: "", // keyword
+        TermTypeId: "", // 選擇詞庫類別
+        EntityTypeId: "", // 選擇實體詞分類
+      },
       listQuery: {
         UserId: 3,
         sDate: "2020-01-01",

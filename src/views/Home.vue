@@ -29,7 +29,11 @@
         <el-table-column type="selection" width="50"></el-table-column>
         <el-table-column label="序號" type="index" width="50"></el-table-column>
         <el-table-column label="類型" prop="source" width="100"></el-table-column>
-        <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
+        <el-table-column label="新聞標題">
+          <template slot-scope="scope">
+            <a class="home__listBox--goDetailPage" @click="goDetailPage(scope.row)">{{ scope.row.newsTitle }}</a>
+          </template>
+        </el-table-column>
         <el-table-column label="新聞時間" width="150">
           <template slot-scope="scope">
             <div>{{ scope.row.newsTime | moment("YYYY-MM-DD") }}</div>
@@ -138,6 +142,13 @@ export default {
           type: "warning",
         });
       }
+    },
+    goDetailPage(data) {
+      let routeUrl = this.$router.resolve({
+        name: "infoDetail",
+        params: { id: data.id },
+      });
+      window.open(routeUrl.href, "_blank");
     },
     draw() {
       let data = this.sampleData;
@@ -333,6 +344,12 @@ export default {
           letter-spacing: 2px;
         }
       }
+    }
+
+    &--goDetailPage {
+      color: #0645ad;
+      text-decoration: underline;
+      cursor: pointer;
     }
   }
 }

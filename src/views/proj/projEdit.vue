@@ -28,7 +28,7 @@
               <el-table-column label="專卷主題">
                 <template slot-scope="scope">
                   <el-button @click="chooseTheme(scope.row.name)" type="text" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">
-                    <b :class="{'body__projTheme--active':relationList[relationList.length - 1].label == scope.row.name}">{{scope.row.name}}</b>
+                    <b :class="{'body__projTheme--active':getTheme.name == scope.row.name}">{{scope.row.name}}</b>
                   </el-button>
                 </template>
               </el-table-column>
@@ -60,7 +60,7 @@
           </el-col>
           <el-col :span="24">
             <strong>專卷主題：</strong>
-            <a class="childrenItem" :class="{'childrenItem__active':relationList[relationList.length - 1].label == item}" v-for="(item, idx) in rightBoxData.projTheme" :key="idx" @click="chooseTheme(item)">{{item}}</a>
+            <a class="childrenItem" :class="{'childrenItem__active':getTheme.name == item}" v-for="(item, idx) in rightBoxData.projTheme" :key="idx" @click="chooseTheme(item)">{{item}}</a>
           </el-col>
         </el-row>
       </div>
@@ -77,7 +77,7 @@
         <el-transfer class="relationList" v-model="relationValue" :data="relationList" :titles="['現有分析內容', '候選關聯新聞']" @change="getObject"></el-transfer>
 
         <div class="relationFuncBtn">
-          <el-button type="primary" @click="saveTopic()">儲存</el-button>
+          <el-button type="primary" @click="saveTopic()" :disabled="!getTheme">儲存</el-button>
           <el-button type="danger" @click="getRelationList()">取消</el-button>
         </div>
       </div>
@@ -194,6 +194,7 @@ export default {
       searchSort: "",
       projSortList: [],
       projThemeList: [],
+      getTheme: "",
       newsListQuery: {
         userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         sDate: "2021-01-01",
@@ -322,36 +323,22 @@ export default {
     async chooseTheme(val) {
       this.$store.dispatch("loadingHandler", true);
       /* 檢查是否已選擇主題 */
-      const checkTheme = this.relationList.filter((res) => res.value == "主題");
       const getNews = this.relationList.filter((resp) => resp.value !== "主題");
       const getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
         (res) => res.name == val
       )[0];
-      /* 若有選主題，則替代值 */
-      if (checkTheme.length > 0) {
-        checkTheme.map((i) => {
-          i.key = getTheme.id;
-          i.label = getTheme.name;
-          return i;
-        });
-      } else {
-        const addTheme = {
-          key: getTheme.id,
-          label: getTheme.name,
-          value: "主題",
-          disabled: true,
-        };
-        this.relationList.push(addTheme);
-      }
 
-      getNews.map((item) => {
-        item.disabled = false;
-        return item;
-      });
+      /* 有選擇主題時解鎖新聞 */
+      if (val) {
+        getNews.map((item) => {
+          item.disabled = false;
+          return item;
+        });
+      }
 
       const topicQuery = {
         UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
-        TopicId: getTheme.id,
+        TopicId: this.getTheme.id,
         Page: 1,
         PageSize: 10,
       };
@@ -463,17 +450,11 @@ export default {
         })
           .then(() => {
             this.$store.dispatch("loadingHandler", true);
-            const getTopicId = this.leftRelationIds[
-              this.leftRelationIds.length - 1
-            ];
-            const getNewsIds = this.leftRelationIds.filter(
-              (n, i) => i !== this.leftRelationIds.length - 1
-            );
             const topicQuery = {
               UserId: JSON.parse(window.localStorage.getItem("userInfo"))
                 .userId,
-              TopicId: getTopicId,
-              NewsId: getNewsIds,
+              TopicId: this.getTheme.id,
+              NewsId: this.leftRelationIds,
             };
             this.$api.addDataTopic(topicQuery).then((res) => {
               if (res.data) {
@@ -577,14 +558,6 @@ export default {
     this.getSearchList();
     await this.getNewsList();
     this.getRelationList();
-    if (!!this.$route.query.chooseID) {
-      const chooseIDs = JSON.parse(this.$route.query.chooseID);
-      // console.log(this.$refs);
-      // this.$refs.multipleTable.toggleRowSelection(
-      //   this.tableData.filter((res) => chooseIDs.includes(res.id))
-      // );
-      // console.log(this.multipleSelection);
-    }
   },
 };
 </script>

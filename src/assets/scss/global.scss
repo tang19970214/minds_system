@@ -57,6 +57,20 @@ body {
     }
 }
 
+.el-transfer-panel__header {
+    background: $supColor !important;
+
+    .el-checkbox {
+        &__label {
+            font-weight: bold !important;
+
+            span {
+                color: black !important;
+            }
+        }
+    }
+}
+
 .moveR-enter-active,
 .moveR-leave-active {
     transition: all 0.4s linear;

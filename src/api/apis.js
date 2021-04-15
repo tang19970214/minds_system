@@ -33,6 +33,10 @@ const api = {
   getNewsStatics(data) {
     return req("post", "NewsData/getNewsStatics", data);
   },
+  /* 獲取新聞詳情 */
+  getNewsDetail(data) {
+    return req("post", "NewsData/getNewsDetail", data);
+  },
 
   // 專卷
   getDataByTopicId(data) {
