@@ -27,8 +27,12 @@
     <div class="projSearch__listBox">
       <div class="projSearch__listBox--joinAnalysis">
         <span>
-          <i class="el-icon-s-data"></i>
-          <a>匯出</a>
+          <!-- <i class="el-icon-s-data"></i>
+          <a>匯出</a> -->
+          <download-csv :data="multipleSelection" :name="'《' + projSort + '-' + projTheme + '》專卷查詢'">
+            <i class="el-icon-s-data"></i>
+            <a>匯出</a>
+          </download-csv>
         </span>
 
         <span @click="openRelationAnalysis()">
@@ -57,12 +61,6 @@ export default {
   data() {
     return {
       openSearchBox: true,
-      //   listQuery: {
-      //     UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-      //     TopicId: 16,
-      //     Page: 1,
-      //     PageSize: 10,
-      //   },
       projSort: "",
       projTheme: "",
       sortList: [],
@@ -131,6 +129,7 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
+      console.log(val);
     },
   },
   mounted() {
@@ -197,7 +196,9 @@ export default {
       width: 100%;
       padding: 0 30px;
       box-sizing: border-box;
-      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
 
       span {
         transition: 0.6s;

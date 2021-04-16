@@ -6,6 +6,7 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
+import JsonCSV from 'vue-json-csv'
 
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { fas } from "@fortawesome/free-solid-svg-icons"
@@ -20,6 +21,7 @@ Vue.config.productionTip = false
 Vue.use(ElementUI)
 Vue.use(VueAxios, axios)
 Vue.use(require('vue-moment'))
+Vue.component('downloadCsv', JsonCSV)
 Vue.component("font-awesome-icon", FontAwesomeIcon)
 
 Vue.prototype.$api = api

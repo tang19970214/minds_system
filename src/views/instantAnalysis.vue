@@ -10,7 +10,24 @@
       <el-row>
         <el-col :span="14">
           <div class="instantAnalysis__card--result">
-            分析結果
+            <div class="markKeyWord">
+              <el-tooltip effect="dark" content="國家" placement="top">
+                <font-awesome-icon icon="flag" />
+              </el-tooltip>
+              <el-tooltip effect="dark" content="地點" placement="top">
+                <font-awesome-icon icon="map-marker-alt" />
+              </el-tooltip>
+              <el-tooltip effect="dark" content="人名" placement="top">
+                <font-awesome-icon icon="user" />
+              </el-tooltip>
+              <el-tooltip effect="dark" content="組織" placement="top">
+                <font-awesome-icon icon="building" />
+              </el-tooltip>
+            </div>
+
+            <div class="newsContent">
+              {{getAnalysisContent}}
+            </div>
           </div>
         </el-col>
 
@@ -25,8 +42,9 @@
                 <div class="detailPage__tagBox--body">
                   <div v-if="collapseList[item.value].length > 0">
                     <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
-                      <strong v-if="item.value == 'Nation'">{{items.w}}</strong>
+                      <strong v-if="item.value == 'Nation' || item.value == 'Place'">{{items.w}}</strong>
                       <strong v-else-if="item.value == 'TitlePeople'">{{items.para}}</strong>
+                      <strong v-else-if="item.value == 'Org'">{{items.OrgName}}</strong>
                     </el-tag>
                   </div>
                   <div v-else>
@@ -72,9 +90,10 @@ export default {
     return {
       activeName: "",
       listQuery: {
-        data: "從川普到拜登！台美關係持續友好　美國官員訪台層級不斷提高",
+        data: "",
         param: "BizNews",
       },
+      getAnalysisContent: "",
       tagGroup: [
         { id: 1, title: "國家", value: "Nation" },
         { id: 2, title: "地點", value: "Place" },
@@ -92,23 +111,22 @@ export default {
         let setBG = "";
         switch (id) {
           case 1:
-            setBG = "#FFFFCE";
+            setBG = "#BBFFFF";
             break;
           case 2:
-            setBG = "#FFD9EC";
-            break;
-          case 3:
             setBG = "#BBFFBB";
             break;
+          case 3:
+            setBG = "#FFFFCE";
+            break;
           case 4:
-            setBG = "#BBFFFF";
+            setBG = "#FFD9EC";
             break;
         }
         return setBG;
       };
     },
   },
-
   methods: {
     getList() {
       this.$api
@@ -123,6 +141,7 @@ export default {
     },
     startAnalysis() {
       this.$store.dispatch("loadingHandler", true);
+      this.getAnalysisContent = this.listQuery.data;
       this.getList();
     },
   },
@@ -171,10 +190,53 @@ export default {
     }
 
     &--result {
+      position: relative;
       width: 100%;
-      min-height: 500px;
+      height: calc(100vh - 100px);
+      // min-height: 500px;
       border: 1px solid #2d2d2d;
       margin-top: 20px;
+
+      .markKeyWord {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        svg {
+          padding: 0 8px;
+          transition: 0.4s;
+          cursor: pointer;
+
+          &:nth-child(1) {
+            color: #4dffff;
+          }
+          &:nth-child(2) {
+            color: #79ff79;
+          }
+          &:nth-child(3) {
+            color: #ffe66f;
+          }
+          &:nth-child(4) {
+            color: #ff95ca;
+          }
+
+          &:hover {
+            transform: scale(1.3);
+          }
+        }
+      }
+
+      .newsContent {
+        width: 100%;
+        height: calc(100% - 32px);
+        padding: 8px;
+        overflow: auto;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+      }
     }
 
     &--collapse {

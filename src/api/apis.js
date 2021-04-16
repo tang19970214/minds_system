@@ -58,16 +58,16 @@ const api = {
 
   // 詞庫維護
   /* 獲取 */
-  // getTermList(data) {
-  //   return req("post", "TermInfo/getTermInfoList", data);
-  // },
+  getTermInfoList(data) {
+    return req("post", "TermInfo/getTermInfoList", data);
+  },
   /* 獲取詞庫類別 */
   getTermTypeList(data) {
     return req("post", "TermType/getTermTypeList", data);
   },
   /* 獲取實體詞 */
   getEntityTypeList(data) {
-    return req("post", "TermType/getEntityTypeList", data);
+    return req("post", "EntityType/getEntityTypeList", data);
   },
   /* 新增 */
   addTermInfo(data) {
