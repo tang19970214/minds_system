@@ -37,7 +37,6 @@
               <div class="detailPage__tagBox" v-for="item in tagGroup" :key="item.id">
                 <div class="detailPage__tagBox--header" :style="{background: getBG(item.id)}">
                   <strong>{{item.title}}</strong>
-                  <i class="el-icon-plus"></i>
                 </div>
                 <div class="detailPage__tagBox--body">
                   <div v-if="collapseList[item.value].length > 0">
@@ -58,7 +57,6 @@
               <div class="detailPage__tagBox" v-for="item in tagGroup" :key="item.id">
                 <div class="detailPage__tagBox--header" :style="{background: getBG(item.id)}">
                   <strong>{{item.title}}</strong>
-                  <i class="el-icon-plus"></i>
                 </div>
                 <div class="detailPage__tagBox--body">
                   <p class="noData">無資料</p>
@@ -268,7 +266,6 @@ export default {
             border-bottom: 1px solid #eee;
             display: flex;
             align-items: center;
-            justify-content: space-between;
             color: #191970;
 
             i {

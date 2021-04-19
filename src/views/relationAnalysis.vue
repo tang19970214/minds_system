@@ -130,8 +130,15 @@ export default {
         })
         .catch(() => {});
     },
+    sideBarList() {
+      this.$api.getTopology().then((res) => {
+        console.log(res);
+      });
+    },
   },
-  mounted() {},
+  mounted() {
+    // this.sideBarList();
+  },
 };
 </script>
 

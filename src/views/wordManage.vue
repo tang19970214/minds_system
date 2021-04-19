@@ -6,20 +6,41 @@
 
     <transition name="moveR">
       <div class="wordManage__searchBox" v-if="openSearchBox">
+        <div class="wordManage__searchBox--dateRange">
+          <div class="sDate">
+            <div class="sDate__title">
+              <label>開始日期：</label>
+            </div>
+            <el-date-picker v-model="listQuery.sDate" type="date" placeholder="請選擇開始日期" format="yyyy-MM-dd">
+            </el-date-picker>
+          </div>
+          <div class="eDate">
+            <div class="eDate__title">
+              <label>結束日期：</label>
+            </div>
+            <el-date-picker v-model="listQuery.eDate" type="date" placeholder="請選擇開始日期">
+            </el-date-picker>
+          </div>
+        </div>
+
         <div class="wordManage__searchBox--kindAndSort">
           <div class="kind">
-            <label>維護詞庫類別：</label>
+            <div class="kind__title">
+              <label>維護詞庫類別：</label>
+            </div>
             <el-select v-model="listQuery.TermTypeId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
-              <el-option label="請選擇" value=""></el-option>
+              <el-option label="請選擇" :value="0"></el-option>
               <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
             </el-select>
           </div>
 
           <div class="sort">
-            <label>實體詞分類：</label>
-            <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇實體詞分類" no-data-text="無數據" :disabled="listQuery.TermTypeId !== '實體詞'">
-              <el-option label="請選擇" value=""></el-option>
-              <el-option v-for="item in entityList" :key="item.id" :label="item.entityName" :value="item.id"></el-option>
+            <div class="sort__title">
+              <label>實體詞分類：</label>
+            </div>
+            <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇" no-data-text="無數據" :disabled="listQuery.TermTypeId !== 3">
+              <el-option label="請選擇" :value="0"></el-option>
+              <el-option v-for="item in entityList" :key="item.id" :label="item.entityName" :value="item.entityId"></el-option>
             </el-select>
           </div>
         </div>
@@ -27,7 +48,7 @@
         <div class="wordManage__searchBox--searchStr">
           <div class="keyword">
             <label>關鍵字：</label>
-            <el-input v-model="listQuery.query"></el-input>
+            <el-input v-model="listQuery.Query"></el-input>
           </div>
           <el-button type="primary" @click="searchWord()">查詢</el-button>
         </div>
@@ -36,7 +57,7 @@
 
     <div class="wordManage__listBox">
       <div class="wordManage__listBox--add">
-        <span>
+        <span @click="openAddWordManage = true">
           <i class="el-icon-plus"></i>
           <a>新增</a>
         </span>
@@ -45,31 +66,11 @@
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column type="index" label="序號" width="60"></el-table-column>
-        <el-table-column label="監控詞">
-          <template slot-scope="scope">
-            {{scope.row}}}
-          </template>
+        <el-table-column label="實體詞分類">
+          {{getEntity(listQuery.EntityTypeId)}}
         </el-table-column>
-        <el-table-column label="過濾詞">
-          <template slot-scope="scope">
-            {{scope.row}}}
-          </template>
-        </el-table-column>
-        <el-table-column label="實體詞">
-          <template slot-scope="scope">
-            {{scope.row}}}
-          </template>
-        </el-table-column>
-        <el-table-column label="同義詞">
-          <template slot-scope="scope">
-            {{scope.row}}}
-          </template>
-        </el-table-column>
-        <el-table-column label="新詞">
-          <template slot-scope="scope">
-            {{scope.row}}}
-          </template>
-        </el-table-column>
+        <el-table-column label="實體詞名稱" prop="term"></el-table-column>
+        <el-table-column label="備註" prop="memo"></el-table-column>
         <el-table-column fixed="right" label="操作" width="200">
           <template slot-scope="scope">
             <div>
@@ -89,26 +90,76 @@
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- modal -->
+    <el-dialog class="addWordManageModal" title="新增實體詞" :visible.sync="openAddWordManage" width="50%" center>
+      <el-form :model="addWordManage" :rules="rules_openAddWordManage" ref="ruleForm_openAddWordManage" label-width="130px">
+        <el-form-item label="詞庫類別">
+          <strong>實體詞</strong>
+        </el-form-item>
+        <el-form-item label="實體詞分類" prop="Term">
+          <el-input v-model="addWordManage.Term"></el-input>
+        </el-form-item>
+        <el-form-item label="備註" prop="memo">
+          <el-input type="textarea" v-model="addWordManage.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="addEntity()">新增</el-button>
+        <el-button type="danger" @click="openAddWordManage = false">取消</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   data() {
     return {
       openSearchBox: true,
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
         Query: "", // keyword
-        TermTypeId: 3, // 選擇詞庫類別
-        EntityTypeId: 1, // 選擇實體詞分類
+        TermTypeId: 0, // 選擇詞庫類別
+        EntityTypeId: 0, // 選擇實體詞分類
+        sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
+        eDate: moment().format("YYYY-MM-DD"),
       },
       wordClassList: [],
       entityList: [],
 
       tableData: [],
       multipleSelection: [],
+
+      openAddWordManage: false,
+      addWordManage: {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
+        Term: "",
+        POS: 128,
+        Freq: 20000,
+        TermTypeId: 3,
+        EntityTypeId: "",
+        memo: "",
+      },
+      rules_openAddWordManage: {
+        Term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
     };
+  },
+  computed: {
+    getEntity() {
+      return (id) => {
+        return this.entityList?.filter((res) => res.entityId == id)[0]
+          ?.entityName;
+      };
+    },
   },
   methods: {
     getKeyClass() {
@@ -131,20 +182,27 @@ export default {
     },
     /* 取得所選詞庫類別 */
     getWordClass(val) {
-      if (val == "實體詞") {
+      if (val == 3) {
         this.getEntityTypeList();
       } else {
-        this.listQuery.EntityTypeId = "";
+        this.listQuery.EntityTypeId = 0;
       }
     },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
+        console.log(res);
         this.tableData = res.data;
         this.$store.dispatch("loadingHandler", false);
       });
     },
     searchWord() {
-      console.log(this.listQuery);
+      this.listQuery.sDate = moment(this.listQuery.sDate).format("YYYY-MM-DD");
+      this.listQuery.eDate = moment(this.listQuery.eDate).format("YYYY-MM-DD");
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    },
+    addEntity() {
+      console.log(this.addWordManage);
     },
     editWordManage(data) {},
     delWordManage(data) {},
@@ -203,10 +261,36 @@ export default {
     border-bottom: 1px solid #191972;
 
     label {
+      min-width: 140px;
+      max-width: 140px;
       font-weight: 600;
       color: #2a2a2a;
       letter-spacing: 2px;
       font-size: 18px;
+    }
+
+    &--dateRange {
+      width: 100%;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+
+      .sDate,
+      .eDate {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        &__title {
+          min-width: 140px;
+          max-width: 140px;
+        }
+
+        .el-input {
+          min-width: 350px !important;
+        }
+      }
     }
 
     &--kindAndSort {
@@ -215,15 +299,16 @@ export default {
       align-items: center;
       justify-content: space-around;
 
-      label {
-        font-weight: 600;
-        color: #2a2a2a;
-        letter-spacing: 2px;
-        font-size: 18px;
-      }
-
       .kind,
       .sort {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        &__title {
+          min-width: 140px;
+          max-width: 140px;
+        }
         .el-select {
           min-width: 350px !important;
         }
@@ -232,7 +317,7 @@ export default {
 
     &--searchStr {
       width: 100%;
-      padding-top: 20px;
+      margin-top: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -241,11 +326,6 @@ export default {
         display: flex;
         align-items: center;
         justify-content: center;
-
-        label {
-          min-width: 100px;
-          max-width: 100px;
-        }
 
         .el-input {
           min-width: 350px;
@@ -296,6 +376,24 @@ export default {
       &:last-child {
         &::after {
           content: "";
+        }
+      }
+    }
+
+    .el-table {
+      i {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .addWordManageModal {
+    .el-dialog {
+      &__body {
+        strong {
+          font-size: 20px;
+          text-decoration: underline;
+          letter-spacing: 2px;
         }
       }
     }

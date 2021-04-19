@@ -45,6 +45,9 @@ const api = {
   getUserTopic(data) {
     return req("post", "UserTopic/getUserTopic", data);
   },
+  getTopology(data) {
+    return req("post", "Topology/getTopology", data);
+  },
 
   // 即時分析
   getEntities(data) {

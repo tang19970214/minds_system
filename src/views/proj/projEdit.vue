@@ -1,7 +1,43 @@
 <template>
   <div class="projEdit">
 
-    <div class="projEdit__leftBox" :style="checkLeftBoxWidth.leftBox">
+    <div class="projEdit__sideBar" :style="checkLeftBoxWidth.leftBox">
+      <div class="projEdit__sideBar--title" :class="{'colSideBar': !isCollapse}">
+        <strong :class="{'vertical': !isCollapse}">專卷分類：</strong>
+        <i class="el-icon-s-fold" :class="{'goRound': !isCollapse}" @click="isCollapse = !isCollapse"></i>
+      </div>
+
+      <div class="projEdit__sideBar--projSort" v-if="isCollapse">
+        <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
+          <el-option label="請選擇" value=""></el-option>
+          <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
+        </el-select>
+        <el-tooltip effect="dark" content="新增專卷分類" placement="bottom">
+          <i class="el-icon-plus" @click="openAddProjSort = true"></i>
+        </el-tooltip>
+      </div>
+
+      <div class="projEdit__sideBar--projTheme" v-if="isCollapse">
+        <span @click="checkSort()">
+          <i class="el-icon-circle-plus-outline"></i>
+          <a>新增主題</a>
+        </span>
+      </div>
+
+      <div class="projEdit__sideBar--themeContent" v-if="isCollapse">
+        <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" align="center" style="width: 100%" border empty-text="暫無數據">
+          <el-table-column label="專卷主題">
+            <template slot-scope="scope">
+              <el-button @click="chooseTheme(scope.row.name)" type="text" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">
+                <b :class="{'body__projTheme--active':getTheme.name == scope.row.name}">{{scope.row.name}}</b>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- <div class="projEdit__leftBox" :style="checkLeftBoxWidth.leftBox">
       <transition name="moveL">
         <div class="body" v-if="openLeftBox">
           <div class="body__projSort">
@@ -41,7 +77,7 @@
         <i class="el-icon-caret-left" @click="openLeftBox = false" v-if="openLeftBox"></i>
         <i class="el-icon-caret-right" @click="openLeftBox = true" v-else></i>
       </div>
-    </div>
+    </div> -->
 
     <div class="projEdit__rightBox" :style="checkLeftBoxWidth.rightBox">
       <div class="projEdit__rightBox--infoBox">
@@ -190,6 +226,7 @@ export default {
   components: { Page },
   data() {
     return {
+      isCollapse: true,
       openLeftBox: true,
       searchSort: "",
       projSortList: [],
@@ -246,9 +283,9 @@ export default {
   computed: {
     checkLeftBoxWidth() {
       return {
-        leftBox: this.openLeftBox ? "" : "width: 1.5%",
-        shrink: this.openLeftBox ? "" : "width: 100%",
-        rightBox: this.openLeftBox ? "" : "width: 98.5%",
+        leftBox: this.isCollapse ? "" : "width: 60px",
+        shrink: this.isCollapse ? "" : "width: 100%",
+        rightBox: this.isCollapse ? "" : "width: calc(100% - 60px)",
       };
     },
     getChild() {
@@ -564,124 +601,223 @@ export default {
 
 <style lang="scss">
 .projEdit {
+  position: relative;
   width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: flex-start;
-  position: relative;
 
-  &__leftBox {
+  &__sideBar {
     width: 250px;
-    height: 100%;
+    min-height: 100vh;
+    padding: 8px;
+    box-sizing: border-box;
     background: #191970;
-    display: flex;
-    align-items: flex-start;
+    color: white;
     border-right: 1px solid black;
 
-    .body {
-      width: 95%;
-      min-height: 100vh;
-      padding: 12px;
-      box-sizing: border-box;
-      border-right: 1px solid white;
+    &.shrinkBar {
+      width: 60px;
+    }
 
-      &__projSort {
-        width: 100%;
-        display: flex;
-        align-items: flex-start;
-        flex-direction: column;
-        color: white;
+    &--title {
+      width: 100%;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row;
+      font-size: 20px;
 
-        &--func {
-          width: 100%;
-          padding: 16px 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .el-select {
-          width: 150px !important;
-        }
-
-        i {
-          font-weight: bolder;
-          color: white;
-          font-size: 24px;
-          transition: 0.5s;
-          cursor: pointer;
-
-          &:hover {
-            transform: scale(1.2);
-          }
+      i {
+        transition: 0.6s;
+        cursor: pointer;
+        &:hover {
+          transform: scale(1.2);
         }
       }
 
-      &__addTheme {
-        width: 100%;
+      &.colSideBar {
+        flex-direction: column-reverse !important;
+      }
+
+      .vertical {
+        writing-mode: vertical-lr;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-
-        span {
-          transition: 0.6s;
-          cursor: pointer;
-          i,
-          a {
-            padding: 0 2px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-          }
-
-          &:hover {
-            letter-spacing: 2px;
-          }
-        }
+        padding-top: 16px;
       }
 
-      &__projTheme {
-        width: 100%;
-        padding-top: 32px;
+      .goRound {
+        transform: rotate(180deg);
+      }
+    }
 
-        b {
-          color: #191970;
-          font-size: 18px;
-          transition: 0.4s;
+    &--projSort {
+      width: 100%;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-          &:hover {
-            color: #00abb9;
-            letter-spacing: 2px;
-          }
-        }
+      .el-select {
+        width: 200px;
+      }
 
-        &--active {
-          color: #00abb9 !important;
+      i {
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.5s;
+
+        &:hover {
+          transform: scale(1.3);
         }
       }
     }
 
-    &--shrinkLeftBox {
-      width: 5%;
-      min-height: 100vh;
-      color: white;
+    &--projTheme {
+      width: 100%;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      span {
+        transition: 0.5s;
+        cursor: pointer;
+        i,
+        a {
+          font-size: 18px;
+          font-weight: bold;
+          padding-left: 4px;
+        }
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+
+    &--themeContent {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-
-      i {
-        padding: 16px 0;
-        font-weight: bolder;
-        font-size: 20px;
-        transition: 0.4s;
-        cursor: pointer;
-
-        &:hover {
-          color: #00abb9;
-        }
-      }
     }
   }
+
+  // &__leftBox {
+  //   width: 250px;
+  //   height: 100%;
+  //   background: #191970;
+  //   display: flex;
+  //   align-items: flex-start;
+  //   border-right: 1px solid black;
+
+  //   .body {
+  //     width: 95%;
+  //     min-height: 100vh;
+  //     padding: 12px;
+  //     box-sizing: border-box;
+  //     border-right: 1px solid white;
+
+  //     &__projSort {
+  //       width: 100%;
+  //       display: flex;
+  //       align-items: flex-start;
+  //       flex-direction: column;
+  //       color: white;
+
+  //       &--func {
+  //         width: 100%;
+  //         padding: 16px 0;
+  //         display: flex;
+  //         align-items: center;
+  //         justify-content: space-between;
+  //       }
+
+  //       .el-select {
+  //         width: 150px !important;
+  //       }
+
+  //       i {
+  //         font-weight: bolder;
+  //         color: white;
+  //         font-size: 24px;
+  //         transition: 0.5s;
+  //         cursor: pointer;
+
+  //         &:hover {
+  //           transform: scale(1.2);
+  //         }
+  //       }
+  //     }
+
+  //     &__addTheme {
+  //       width: 100%;
+  //       display: flex;
+  //       align-items: center;
+  //       justify-content: flex-end;
+
+  //       span {
+  //         transition: 0.6s;
+  //         cursor: pointer;
+  //         i,
+  //         a {
+  //           padding: 0 2px;
+  //           font-size: 18px;
+  //           font-weight: bold;
+  //           color: white;
+  //         }
+
+  //         &:hover {
+  //           letter-spacing: 2px;
+  //         }
+  //       }
+  //     }
+
+  //     &__projTheme {
+  //       width: 100%;
+  //       padding-top: 32px;
+
+  //       b {
+  //         color: #191970;
+  //         font-size: 18px;
+  //         transition: 0.4s;
+
+  //         &:hover {
+  //           color: #00abb9;
+  //           letter-spacing: 2px;
+  //         }
+  //       }
+
+  //       &--active {
+  //         color: #00abb9 !important;
+  //       }
+  //     }
+  //   }
+
+  //   &--shrinkLeftBox {
+  //     width: 5%;
+  //     min-height: 100vh;
+  //     color: white;
+  //     display: flex;
+  //     align-items: center;
+  //     justify-content: center;
+
+  //     i {
+  //       padding: 16px 0;
+  //       font-weight: bolder;
+  //       font-size: 20px;
+  //       transition: 0.4s;
+  //       cursor: pointer;
+
+  //       &:hover {
+  //         color: #00abb9;
+  //       }
+  //     }
+  //   }
+  // }
 
   &__rightBox {
     width: calc(100% - 250px);
