@@ -8,8 +8,32 @@
             <label>新聞來源：<strong>{{detailList.newsAuthor}}</strong></label>
             <label>新聞時間：<strong>{{detailList.newsTime | moment("YYYY-MM-DD HH:mm")}}</strong></label>
           </div>
+
           <div class="detailPage__leftBox--newsContent">
-            <p>{{detailList.newsContent}}</p>
+            <div class="markKeyWord">
+              <div class="markKeyWord__title">
+                <strong>關鍵字：</strong>
+                <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
+                <a v-if="queries.length > 0" @click="queries = []">清空</a>
+              </div>
+
+              <div class="markKeyWord__markIcon">
+                <el-tooltip effect="dark" content="國家" placement="top">
+                  <font-awesome-icon icon="flag" @click="markTextHighlight('Nation')" />
+                </el-tooltip>
+                <el-tooltip effect="dark" content="地點" placement="top">
+                  <font-awesome-icon icon="map-marker-alt" @click="markTextHighlight('Place')" />
+                </el-tooltip>
+                <el-tooltip effect="dark" content="人名" placement="top">
+                  <font-awesome-icon icon="user" @click="markTextHighlight('TitlePeople')" />
+                </el-tooltip>
+                <el-tooltip effect="dark" content="組織" placement="top">
+                  <font-awesome-icon icon="building" @click="markTextHighlight('Org')" />
+                </el-tooltip>
+              </div>
+            </div>
+
+            <text-highlight :queries="queries">{{ detailList.newsContent }}</text-highlight>
           </div>
         </div>
       </el-col>
@@ -19,13 +43,13 @@
           <div class="detailPage__rightBox--tagBox" v-for="item in tagGroup" :key="item.id">
             <div class="header" :style="{background: getBG(item.id)}">
               <strong>{{item.title}}</strong>
-              <i class="el-icon-plus"></i>
             </div>
             <div class="body">
               <div v-if="collapseList[item.value].length > 0">
                 <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
-                  <strong v-if="item.value == 'Nation'">{{items.w}}</strong>
+                  <strong v-if="item.value == 'Nation' || item.value == 'Place'">{{items.w}}</strong>
                   <strong v-else-if="item.value == 'TitlePeople'">{{items.para}}</strong>
+                  <strong v-else-if="item.value == 'Org'">{{items.OrgName}}</strong>
                 </el-tag>
               </div>
               <div v-else>
@@ -60,7 +84,7 @@ export default {
         { id: 4, title: "組織", value: "Org" },
       ],
       collapseList: null,
-      activeName: 1,
+      queries: [],
     };
   },
   computed: {
@@ -105,6 +129,24 @@ export default {
           this.$store.dispatch("loadingHandler", false);
         })
         .catch(() => {});
+    },
+    markTextHighlight(val) {
+      let setKeyWord = null;
+      switch (val) {
+        case "Nation":
+          setKeyWord = this.collapseList.Nation.map((res) => res.w);
+          break;
+        case "Place":
+          setKeyWord = this.collapseList.Place.map((res) => res.w);
+          break;
+        case "TitlePeople":
+          setKeyWord = this.collapseList.TitlePeople.map((res) => res.para);
+          break;
+        case "Org":
+          setKeyWord = this.collapseList.Org.map((res) => res.OrgName);
+          break;
+      }
+      this.queries = setKeyWord;
     },
     closeDetail() {
       this.$confirm("確定要關閉此頁面嗎？", "提示", {
@@ -163,6 +205,72 @@ export default {
           letter-spacing: 1.6px;
           line-height: 1.6rem;
         }
+
+        .markKeyWord {
+          width: 100%;
+          padding-bottom: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          &__title {
+            width: 80%;
+            display: flex;
+            align-items: center;
+
+            p {
+              margin: 0;
+              padding-right: 8px;
+
+              // &::after {
+              //   content: "、";
+              // }
+
+              // &:last-child {
+              //   background: crimson;
+              // }
+            }
+
+            a {
+              font-size: 10px;
+              color: cornflowerblue;
+              text-decoration: underline;
+              cursor: pointer;
+            }
+          }
+
+          &__markIcon {
+            width: 20%;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+
+            svg {
+              padding: 0 8px;
+              transition: 0.4s;
+              cursor: pointer;
+
+              &:nth-child(1) {
+                color: #4dffff;
+              }
+              &:nth-child(2) {
+                color: #79ff79;
+              }
+              &:nth-child(3) {
+                color: #ffe66f;
+              }
+              &:nth-child(4) {
+                color: #ff95ca;
+              }
+
+              &:hover {
+                transform: scale(1.3);
+              }
+            }
+          }
+        }
       }
     }
 
@@ -189,7 +297,6 @@ export default {
           border-bottom: 1px solid #eee;
           display: flex;
           align-items: center;
-          justify-content: space-between;
           color: #191970;
 
           i {

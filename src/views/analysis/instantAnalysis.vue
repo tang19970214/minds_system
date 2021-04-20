@@ -7,26 +7,32 @@
     <div class="instantAnalysis__card">
       <strong class="instantAnalysis__card--title">分析結果：</strong>
 
+      <div class="instantAnalysis__card--keyWord">
+        <strong>關鍵字：</strong>
+        <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
+        <a v-if="queries.length > 0" @click="queries = []">清空</a>
+      </div>
+
       <el-row>
         <el-col :span="14">
           <div class="instantAnalysis__card--result">
             <div class="markKeyWord">
               <el-tooltip effect="dark" content="國家" placement="top">
-                <font-awesome-icon icon="flag" />
+                <font-awesome-icon icon="flag" @click="markTextHighlight('Nation')" />
               </el-tooltip>
               <el-tooltip effect="dark" content="地點" placement="top">
-                <font-awesome-icon icon="map-marker-alt" />
+                <font-awesome-icon icon="map-marker-alt" @click="markTextHighlight('Place')" />
               </el-tooltip>
               <el-tooltip effect="dark" content="人名" placement="top">
-                <font-awesome-icon icon="user" />
+                <font-awesome-icon icon="user" @click="markTextHighlight('TitlePeople')" />
               </el-tooltip>
               <el-tooltip effect="dark" content="組織" placement="top">
-                <font-awesome-icon icon="building" />
+                <font-awesome-icon icon="building" @click="markTextHighlight('Org')" />
               </el-tooltip>
             </div>
 
             <div class="newsContent">
-              {{getAnalysisContent}}
+              <text-highlight :queries="queries">{{ getAnalysisContent }}</text-highlight>
             </div>
           </div>
         </el-col>
@@ -98,6 +104,7 @@ export default {
         { id: 3, title: "人名", value: "TitlePeople" },
         { id: 4, title: "組織", value: "Org" },
       ],
+      queries: [],
 
       collapseList: null,
       enterAnalysis: false,
@@ -142,6 +149,24 @@ export default {
       this.getAnalysisContent = this.listQuery.data;
       this.getList();
     },
+    markTextHighlight(val) {
+      let setKeyWord = null;
+      switch (val) {
+        case "Nation":
+          setKeyWord = this.collapseList.Nation.map((res) => res.w);
+          break;
+        case "Place":
+          setKeyWord = this.collapseList.Place.map((res) => res.w);
+          break;
+        case "TitlePeople":
+          setKeyWord = this.collapseList.TitlePeople.map((res) => res.para);
+          break;
+        case "Org":
+          setKeyWord = this.collapseList.Org.map((res) => res.OrgName);
+          break;
+      }
+      this.queries = setKeyWord;
+    },
   },
   mounted() {
     this.enterAnalysis = true;
@@ -185,6 +210,33 @@ export default {
       color: #2a2a2a;
       letter-spacing: 2px;
       font-size: 26px;
+    }
+
+    &--keyWord {
+      width: 100%;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+
+      p {
+        margin: 0;
+        padding-right: 8px;
+
+        // &::after {
+        //   content: "、";
+        // }
+
+        // &:last-child {
+        //   background: crimson;
+        // }
+      }
+
+      a {
+        font-size: 10px;
+        color: cornflowerblue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
     }
 
     &--result {
@@ -234,6 +286,7 @@ export default {
         overflow: auto;
         box-sizing: border-box;
         overflow-wrap: break-word;
+        line-height: 1.5rem;
       }
     }
 

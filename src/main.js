@@ -7,6 +7,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import JsonCSV from 'vue-json-csv'
+import TextHighlight from 'vue-text-highlight';
 
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { fas } from "@fortawesome/free-solid-svg-icons"
@@ -22,6 +23,7 @@ Vue.use(ElementUI)
 Vue.use(VueAxios, axios)
 Vue.use(require('vue-moment'))
 Vue.component('downloadCsv', JsonCSV)
+Vue.component('text-highlight', TextHighlight)
 Vue.component("font-awesome-icon", FontAwesomeIcon)
 
 Vue.prototype.$api = api

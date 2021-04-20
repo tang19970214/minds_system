@@ -26,10 +26,12 @@
 
     <div class="projSearch__listBox">
       <div class="projSearch__listBox--joinAnalysis">
-        <span>
-          <!-- <i class="el-icon-s-data"></i>
-          <a>匯出</a> -->
-          <download-csv :data="multipleSelection" :name="'《' + projSort + '-' + projTheme + '》專卷查詢'">
+        <span v-if="multipleSelection.length == 0" @click="cannotCSV()">
+          <i class="el-icon-s-data"></i>
+          <a>匯出</a>
+        </span>
+        <span v-else>
+          <download-csv :data="multipleSelection" :name="'《' + projSort + '-' + getThemeName(projTheme) + '》專卷查詢.csv'">
             <i class="el-icon-s-data"></i>
             <a>匯出</a>
           </download-csv>
@@ -75,6 +77,14 @@ export default {
         const getChildItem =
           data.filter((res) => res.name == this.projSort) || [];
         return getChildItem;
+      };
+    },
+    getThemeName() {
+      return (id) => {
+        const getChild = this.sortList.filter(
+          (res) => res.name == this.projSort
+        )[0].children;
+        return getChild.filter((resp) => resp.id === id)[0].name;
       };
     },
   },
@@ -130,6 +140,12 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
       console.log(val);
+    },
+    cannotCSV() {
+      this.$notify.error({
+        title: "錯誤",
+        message: "請選擇欲匯出之項目",
+      });
     },
   },
   mounted() {
