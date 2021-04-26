@@ -1,115 +1,89 @@
 <template>
   <div class="backtrackAnalysis">
-    <div class="backtrackAnalysis__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
+
+    <div class="analysisDate">
+      <label>分析日期：</label>
+      <el-date-picker v-model="getDateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+      </el-date-picker>
     </div>
 
-    <transition name="moveR">
-      <div class="backtrackAnalysis__searchBox" v-if="openSearchBox">
-        <div class="backtrackAnalysis__searchBox--datetime">
-          <label>分析日期：</label>
-          <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+    <div class="analysisFrom">
+      <label>分析來源：</label>
+      <el-select v-model="listQuery.Source">
+        <el-option label="全部" :value="0"></el-option>
+        <el-option label="新聞" :value="1"></el-option>
+      </el-select>
+    </div>
+
+    <div class="backtrackName">
+      <label>回朔名稱：</label>
+      <el-input v-model="listQuery.Name">
+      </el-input>
+    </div>
+
+    <div class="enable">
+      <label>啟動：</label>
+      <el-radio v-model="listQuery.Enable" label="Y">Y</el-radio>
+      <el-radio v-model="listQuery.Enable" label="N">N</el-radio>
+    </div>
+
+    <div class="enableList">
+      <div class="enableList__tab">
+        <strong>執行一次</strong>
+      </div>
+      <div class="enableList__body">
+        <div class="enableList__body--datetime">
+          <label>YYYY/MM/DD HH:mm:ss</label>
+          <el-date-picker class="w-full" v-model="listQuery.OneTime" type="datetime" placeholder="請選擇日期時間">
           </el-date-picker>
-        </div>
-
-        <div class="backtrackAnalysis__searchBox--fromAndBtn">
-          <div class="analysisFrom">
-            <label>分析來源：</label>
-            <el-select v-model="analysisFrom" placeholder="請選擇查詢來源" no-data-text="無數據">
-              <el-option label="請選擇" value="">
-              </el-option>
-            </el-select>
-          </div>
-
-          <div class="analysisBtn">
-            <el-button type="primary">分析</el-button>
-          </div>
+          <p>24小時制（00-23）</p>
         </div>
       </div>
-    </transition>
+    </div>
 
-    <div class="backtrackAnalysis__listBox">
-      <div class="backtrackAnalysis__listBox--title">
-        <strong>新詞代表</strong>
-      </div>
-
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50"></el-table-column>
-        <el-table-column label="序號" type="index" width="50"></el-table-column>
-        <el-table-column label="資料來源" prop="name" width="150"></el-table-column>
-        <el-table-column label="新詞名稱" prop="name" width="150"></el-table-column>
-        <el-table-column label="選擇詞庫類型">
-          <!-- <template slot-scope="scope"> -->
-          <el-select v-model="wordType" placeholder="請選擇詞庫類型">
-            <el-option label="請選擇" value=""></el-option>
-            <!-- <el-option :label="scope.row.date" :value="scope.row.date"></el-option> -->
-          </el-select>
-          <!-- </template> -->
-        </el-table-column>
-        <el-table-column label="選擇實體分類">
-          <!-- <template slot-scope="scope"> -->
-          <el-select v-model="wordType" placeholder="請選擇實體分類">
-            <el-option label="請選擇" value=""></el-option>
-            <!-- <el-option :label="scope.row.date" :value="scope.row.date"></el-option> -->
-          </el-select>
-          <!-- </template> -->
-        </el-table-column>
-        <el-table-column label="備註" prop="remark"></el-table-column>
-      </el-table>
+    <div class="func">
+      <el-button type="primary" @click="add()">新增</el-button>
+      <el-button type="info" @click="cancel()">取消</el-button>
     </div>
   </div>
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   data() {
     return {
-      openSearchBox: true,
-      dateRange: "",
-      analysisFrom: "",
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          remark: "",
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          remark: "",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          remark: "",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          remark: "",
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          remark: "",
-        },
-      ],
-      wordType: "",
-      multipleSelection: [],
+      listQuery: {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        Type: 3,
+        Name: "",
+        Enable: "Y",
+        OneTime: "",
+        sDate: "",
+        eDate: "",
+        Source: 0,
+      },
+      getDateRange: "",
     };
   },
   methods: {
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach((row) => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
-      }
+    add() {
+      this.listQuery.sDate = moment(this.getDateRange[0]).format("YYYY-MM-DD");
+      this.listQuery.eDate = moment(this.getDateRange[1]).format("YYYY-MM-DD");
+      console.log(this.listQuery);
+      alert("尚未加入功能");
     },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+    cancel() {
+      this.$confirm("確定要取消新增？", "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          this.$router.push("scheduleSearch");
+        })
+        .catch(() => {});
     },
   },
 };
@@ -119,72 +93,119 @@ export default {
 .backtrackAnalysis {
   width: 100%;
   height: 100vh;
-  position: relative;
+  padding: 30px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 
-  &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+  label {
+    font-weight: 600;
+    color: #2a2a2a;
+    letter-spacing: 2px;
+    font-size: 18px;
+    min-width: 120px;
+    white-space: nowrap;
+  }
 
-    strong {
-      color: white;
-    }
+  .analysisDate {
+    width: 100%;
+    padding-bottom: 16px;
+    display: flex;
+    align-items: center;
+  }
 
-    &:hover {
-      background: #038bb4;
+  .analysisFrom {
+    width: 100%;
+    padding-bottom: 16px;
+    display: flex;
+    align-items: center;
+  }
+
+  .backtrackName {
+    width: 100%;
+    padding-bottom: 16px;
+    display: flex;
+    align-items: center;
+    .el-input {
+      max-width: 500px;
     }
   }
 
-  &__searchBox {
+  .enable {
     width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    border-bottom: 1px solid #191972;
+    padding-bottom: 16px;
+    display: flex;
+    align-items: center;
 
     label {
-      font-weight: 600;
-      color: #2a2a2a;
-      letter-spacing: 2px;
-      font-size: 18px;
-    }
-
-    &--fromAndBtn {
-      width: 100%;
-      margin-top: 20px;
-      padding-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      .analysisFrom {
-        width: 100%;
+      &:nth-child(2) {
+        min-width: 30px;
+        max-width: 30px;
       }
-
-      .analysisBtn {
-        width: 100%;
-        text-align: center;
+      &:nth-child(3) {
+        min-width: 30px;
+        max-width: 30px;
       }
     }
   }
 
-  &__listBox {
+  .enableList {
+    width: 100%;
+    padding-top: 24px;
+
+    &__tab {
+      padding: 4px 8px;
+      display: inline;
+      font-size: 18px;
+      border: 1px solid #2d2d2d;
+      border-bottom: none;
+    }
+
+    &__body {
+      margin-top: 4px;
+      padding: 24px 16px;
+      border: 1px solid #2d2d2d;
+
+      &--datetime {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        label {
+          font-size: 16px;
+          min-width: 250px;
+          max-width: 250px;
+          font-weight: 600;
+          color: #2a2a2a;
+          letter-spacing: 2px;
+        }
+
+        p {
+          margin: 0 0 0 16px;
+          min-width: 200px;
+          max-width: 200px;
+          text-align: left;
+        }
+      }
+    }
+  }
+
+  .func {
     width: 100%;
     padding: 20px;
-    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    &--title {
-      width: 100%;
-      text-align: center;
-      color: #191972;
-      letter-spacing: 2px;
-      font-size: 26px;
+    button {
+      &:first-child {
+        margin-right: 16px;
+      }
+      &:last-child {
+        margin-left: 16px;
+      }
     }
   }
 }

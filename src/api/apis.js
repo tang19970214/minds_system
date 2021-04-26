@@ -38,7 +38,7 @@ const api = {
     return req("post", "NewsData/getNewsDetail", data);
   },
 
-  // 專卷
+  // 專卷管理
   getDataByTopicId(data) {
     return req("post", "UserTopic/getDataByTopicId", data);
   },
@@ -49,14 +49,28 @@ const api = {
     return req("post", "Topology/getTopology", data);
   },
 
-  // 即時分析
+  // 分析功能
+  /* 即時分析 */
   getEntities(data) {
     return req("post", "Entities/getEntities", data);
   },
-
-  //  關鍵字分析
+  /* 關鍵字分析 */
   getKeyWord(data) {
     return req("post", "KeyWord/getKeyWord", data);
+  },
+
+  // 排程管理
+  /* 排程查詢 */
+  getScheduleList(data) {
+    return req("post", "Schedule/getScheduleList", data)
+  },
+  /* 排程設定、手動執行 */
+  addSchedule(data) {
+    return req("post", "Schedule/addSchedule", data);
+  },
+  /* 回朔分析 */
+  addBacktrack(data) {
+    return req("post", "Schedule/addBacktrack", data);
   },
 
   // 詞庫維護

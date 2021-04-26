@@ -2,7 +2,7 @@
   <div id="sideBar" :class="{'shrinkBar': isCollapse}">
     <template>
       <!-- 有子層 -->
-      <el-submenu v-if="item.children.length > 0" :index="item.path" :key="item.id">
+      <el-submenu v-if="item.children.length > 0" :index="String(item.id)" :key="item.id">
         <!-- 父層 -->
         <template slot="title">
           <font-awesome-icon v-if="
