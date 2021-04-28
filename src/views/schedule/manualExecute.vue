@@ -20,7 +20,6 @@
         <div class="enableList__body">
           <div class="enableList__body--datetime">
             <label>YYYY/MM/DD HH:mm:ss</label>
-            <!-- <el-input v-model="listQuery.OneTime"></el-input> -->
             <el-date-picker class="w-full" v-model="listQuery.OneTime" type="datetime" placeholder="請選擇日期時間">
             </el-date-picker>
             <p>24小時制（00-23）</p>
@@ -37,6 +36,8 @@
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   data() {
     return {
@@ -45,29 +46,34 @@ export default {
         Type: 1,
         Name: "",
         Enable: "Y",
-        OneTime: "",
+        OneTime: null,
       },
     };
   },
   methods: {
     add() {
-      alert("尚未加入功能");
-      return;
-      console.log(this.listQuery);
-      if (
-        this.listQuery.Name == "" ||
-        this.listQuery.RegularHour == "" ||
-        this.listQuery.RegularMinute == ""
-      ) {
+      if (this.listQuery.Name == "") {
         this.$notify({
           title: "警告",
-          message: "請確實填寫欄位！",
+          message: "尚未輸入『排程名稱』！",
           type: "warning",
         });
       } else {
+        this.$store.dispatch("loadingHandler", true);
+        if (!!this.listQuery.OneTime) {
+          this.listQuery.OneTime = moment(this.listQuery.OneTime).format(
+            "YYYY-MM-DDTHH:mm:ss"
+          );
+        }
         this.$api.addSchedule(this.listQuery).then((res) => {
-          console.log(res);
-          //   this.$router.push("scheduleSearch");
+          if (res.data) {
+            this.$notify({
+              title: "成功",
+              message: "新增成功",
+              type: "success",
+            });
+            this.$router.push("scheduleSearch");
+          }
         });
       }
     },

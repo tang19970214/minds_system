@@ -1,0 +1,363 @@
+<template>
+  <div class="keywordAnalysis">
+    <div class="keywordAnalysis__setting" @click="openSearchBox = !openSearchBox">
+      <strong>查詢設定</strong>
+    </div>
+
+    <transition name="moveR">
+      <div class="keywordAnalysis__searchBox" v-if="openSearchBox">
+        <div class="keywordAnalysis__searchBox--dateRange">
+          <div class="sDate">
+            <div class="sDate__title">
+              <label>分析來源：</label>
+            </div>
+            <el-select v-model="listQuery.TermTypeId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
+              <el-option label="請選擇" :value="0"></el-option>
+              <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
+            </el-select>
+          </div>
+          <div class="eDate">
+            <div class="eDate__title">
+              <label>分析數量：</label>
+            </div>
+            <el-input v-model="listQuery.eDate"> </el-input>
+          </div>
+        </div>
+
+        <div class="keywordAnalysis__searchBox--kindAndSort">
+          <div class="kind">
+            <div class="kind__title">
+              <label>分析日期：</label>
+            </div>
+            <el-date-picker v-model="listQuery.sDate" type="date" placeholder="請選擇開始日期" format="yyyy-MM-dd">
+            </el-date-picker>
+          </div>
+
+          <div class="func">
+            <el-button type="primary" @click="searchWord()">分析</el-button>
+          </div>
+        </div>
+
+      </div>
+    </transition>
+
+    <div class="keywordAnalysis__listBox">
+      <div class="keywordAnalysis__listBox--add">
+        <span @click="openAddkeywordAnalysis = true">
+          <i class="el-icon-plus"></i>
+          <a>新增</a>
+        </span>
+      </div>
+
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
+        <el-table-column type="index" label="序號" width="60"></el-table-column>
+        <el-table-column label="關鍵字" prop="keyword"></el-table-column>
+        <el-table-column label="詞頻" prop="term"></el-table-column>
+        <el-table-column label="關聯關鍵字" prop="memo"></el-table-column>
+      </el-table>
+    </div>
+
+    <!-- modal -->
+    <el-dialog class="addkeywordAnalysisModal" title="新增實體詞" :visible.sync="openAddkeywordAnalysis" width="50%" center>
+      <el-form :model="addkeywordAnalysis" :rules="rules_openAddkeywordAnalysis" ref="ruleForm_openAddkeywordAnalysis" label-width="130px">
+        <el-form-item label="詞庫類別">
+          <strong>實體詞</strong>
+        </el-form-item>
+        <el-form-item label="實體詞分類" prop="Term">
+          <el-input v-model="addkeywordAnalysis.Term"></el-input>
+        </el-form-item>
+        <el-form-item label="備註" prop="memo">
+          <el-input type="textarea" v-model="addkeywordAnalysis.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="addEntity()">新增</el-button>
+        <el-button type="danger" @click="openAddkeywordAnalysis = false">取消</el-button>
+      </span>
+    </el-dialog>
+
+  </div>
+</template>
+
+<script>
+import moment from "moment";
+
+export default {
+  data() {
+    return {
+      openSearchBox: true,
+      listQuery: {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
+        Query: "", // keyword
+        TermTypeId: 0, // 選擇詞庫類別
+        EntityTypeId: 0, // 選擇實體詞分類
+        sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
+        eDate: moment().format("YYYY-MM-DD"),
+      },
+      wordClassList: [],
+      entityList: [],
+      tableData: [],
+
+      openAddkeywordAnalysis: false,
+      addkeywordAnalysis: {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
+        Term: "",
+        POS: 128,
+        Freq: 20000,
+        TermTypeId: 3,
+        EntityTypeId: "",
+        memo: "",
+      },
+      rules_openAddkeywordAnalysis: {
+        Term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
+    };
+  },
+  computed: {
+    getEntity() {
+      return (id) => {
+        return this.entityList?.filter((res) => res.entityId == id)[0]
+          ?.entityName;
+      };
+    },
+  },
+  methods: {
+    getKeyClass() {
+      this.$api
+        .getTermTypeList({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        })
+        .then((res) => {
+          this.wordClassList = res.data;
+        });
+    },
+    getEntityTypeList() {
+      this.$api
+        .getEntityTypeList({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        })
+        .then((res) => {
+          this.entityList = res.data;
+        });
+    },
+    /* 取得所選詞庫類別 */
+    getWordClass(val) {
+      if (val == 3) {
+        this.getEntityTypeList();
+      } else {
+        this.listQuery.EntityTypeId = 0;
+      }
+    },
+    async getList() {
+      await this.$api.getTermInfoList(this.listQuery).then((res) => {
+        console.log(res);
+        this.tableData = res.data;
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
+    searchWord() {
+      this.listQuery.sDate = moment(this.listQuery.sDate).format("YYYY-MM-DD");
+      this.listQuery.eDate = moment(this.listQuery.eDate).format("YYYY-MM-DD");
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    },
+    addEntity() {
+      console.log(this.addkeywordAnalysis);
+    },
+    editkeywordAnalysis(data) {},
+    delkeywordAnalysis(data) {},
+    toggleSelection(rows) {
+      if (rows) {
+        rows.forEach((row) => {
+          this.$refs.multipleTable.toggleRowSelection(row);
+        });
+      } else {
+        this.$refs.multipleTable.clearSelection();
+      }
+    },
+  },
+  mounted() {
+    this.$store.dispatch("loadingHandler", true);
+    this.getKeyClass();
+    this.getList();
+  },
+};
+</script>
+
+<style lang="scss">
+.keywordAnalysis {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+
+  &__setting {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    padding: 16px 8px;
+    background: #00abb9;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: vertical-lr;
+    transition: 0.6s;
+    cursor: pointer;
+
+    strong {
+      color: white;
+    }
+
+    &:hover {
+      background: #038bb4;
+    }
+  }
+
+  &__searchBox {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #191972;
+
+    label {
+      min-width: 140px;
+      max-width: 140px;
+      font-weight: 600;
+      color: #2a2a2a;
+      letter-spacing: 2px;
+      font-size: 18px;
+    }
+
+    &--dateRange {
+      width: 100%;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .sDate,
+      .eDate {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        &__title {
+          min-width: 140px;
+          max-width: 140px;
+        }
+
+        .el-input {
+          min-width: 350px !important;
+        }
+      }
+    }
+
+    &--kindAndSort {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .kind,
+      .func {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        &__title {
+          min-width: 140px;
+          max-width: 140px;
+        }
+        .el-select {
+          min-width: 350px !important;
+        }
+      }
+    }
+
+    &--searchStr {
+      width: 100%;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .keyword {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .el-input {
+          min-width: 350px;
+          max-width: 350px;
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  &__listBox {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+
+    &--add {
+      width: 100%;
+      padding: 0 30px;
+      box-sizing: border-box;
+      text-align: right;
+
+      span {
+        transition: 0.6s;
+        cursor: pointer;
+        i,
+        a {
+          font-size: 18px;
+          font-weight: bold;
+          color: #191972;
+        }
+        i {
+          padding-right: 4px;
+        }
+
+        &:hover {
+          letter-spacing: 2px;
+        }
+      }
+    }
+
+    &--tableKeyword {
+      display: inline;
+      align-items: center;
+      &::after {
+        content: "、";
+      }
+
+      &:last-child {
+        &::after {
+          content: "";
+        }
+      }
+    }
+
+    .el-table {
+      i {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .addkeywordAnalysisModal {
+    .el-dialog {
+      &__body {
+        strong {
+          font-size: 20px;
+          text-decoration: underline;
+          letter-spacing: 2px;
+        }
+      }
+    }
+  }
+}
+</style>

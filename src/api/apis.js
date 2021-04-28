@@ -68,12 +68,52 @@ const api = {
   addSchedule(data) {
     return req("post", "Schedule/addSchedule", data);
   },
+  updateSchedule(data) {
+    return req("post", "Schedule/updateSchedule", data);
+  },
+  deleteSchedule(data) {
+    return req("post", "Schedule/deleteSchedule", data);
+  },
   /* 回朔分析 */
   addBacktrack(data) {
     return req("post", "Schedule/addBacktrack", data);
   },
 
-  // 詞庫維護
+  // 實體詞庫管理
+  /* 實體分類 */
+  getCatList(data) {
+    return req("post", "CustDefsCat/getCatList", data);
+  },
+  /* 新增實體分類 */
+  addCat(data) {
+    return req("post", "CustDefsCat/addCat", data);
+  },
+  /* 修改實體分類 */
+  updateCat(data) {
+    return req("post", "CustDefsCat/updateCat", data);
+  },
+  /* 刪除實體分類 */
+  deleteCat(data) {
+    return req("post", "CustDefsCat/deleteCat", data);
+  },
+  /* 實體管理 */
+  getCustDefsList(data) {
+    return req("post", "CustDefs/getCustDefsList", data);
+  },
+  /* 新增實體管理 */
+  addCustDefs(data) {
+    return req("post", "CustDefs/addCustDefs", data);
+  },
+  /* 修改實體管理 */
+  updateCustDefs(data) {
+    return req("post", "CustDefs/updateCustDefs", data);
+  },
+  /* 刪除實體管理 */
+  deleteCustDefs(data) {
+    return req("post", "CustDefs/deleteCustDefs", data);
+  },
+
+  /* 詞庫維護 */
   /* 獲取 */
   getTermInfoList(data) {
     return req("post", "TermInfo/getTermInfoList", data);
@@ -111,6 +151,16 @@ const api = {
   /* 刪除 */
   deleteUserTopic(data) {
     return req("post", "UserTopic/deleteUserTopic", data);
+  },
+
+  // 管理報表
+  /* 系統登入紀錄 */
+  getUserLogin(data) {
+    return req("post", "UserLogin/getUserLogin", data);
+  },
+  /* 系統操作紀錄 */
+  getUserAction(data) {
+    return req("post", "UserLogin/getUserAction", data);
   },
 
   // 帳號管理

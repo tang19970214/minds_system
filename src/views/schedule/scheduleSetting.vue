@@ -20,13 +20,17 @@
         <div class="enableList__body">
           <div class="enableList__body--hour">
             <label>時：</label>
-            <el-input v-model="listQuery.RegularHour"></el-input>
+            <el-select class="w-full" v-model="listQuery.RegularHour" placeholder="請選擇時">
+              <el-option v-for="item in 23" :key="item" :label="item" :value="item"></el-option>
+            </el-select>
             <p>24小時制（00-23）</p>
           </div>
 
           <div class="enableList__body--min">
             <label>分：</label>
-            <el-input v-model="listQuery.RegularMinute"></el-input>
+            <el-select class="w-full" v-model="listQuery.RegularMinute" placeholder="請選擇分">
+              <el-option v-for="item in 59" :key="item" :label="item" :value="item"></el-option>
+            </el-select>
             <p>（00-59）</p>
           </div>
         </div>
@@ -56,9 +60,6 @@ export default {
   },
   methods: {
     add() {
-      alert("尚未加入功能");
-      return;
-      console.log(this.listQuery);
       if (
         this.listQuery.Name == "" ||
         this.listQuery.RegularHour == "" ||
@@ -70,9 +71,16 @@ export default {
           type: "warning",
         });
       } else {
+        this.$store.dispatch("loadingHandler", true);
         this.$api.addSchedule(this.listQuery).then((res) => {
-          console.log(res);
-          //   this.$router.push("scheduleSearch");
+          if (res.data) {
+            this.$notify({
+              title: "成功",
+              message: "新增成功",
+              type: "success",
+            });
+            this.$router.push("scheduleSearch");
+          }
         });
       }
     },

@@ -8,7 +8,7 @@
       <div class="scheduleSearchPage__searchBox" v-if="openSearchBox">
         <div class="scheduleName">
           <label>排程名稱：</label>
-          <el-input v-model="listQuery.query"></el-input>
+          <el-input v-model="listQuery.query" clearable></el-input>
         </div>
 
         <div class="scheduleType">
@@ -21,7 +21,7 @@
           </el-select>
         </div>
 
-        <el-button type="primary" @click="searchSchedule">查詢</el-button>
+        <el-button type="primary" @click="searchSchedule()">查詢</el-button>
       </div>
     </transition>
 
@@ -29,11 +29,10 @@
       <div class="scheduleSearchPage__listBox--info">
         <div class="work">
           <label>排程作業：</label>
-          <p>asdf</p>
         </div>
 
         <div class="add">
-          <span>
+          <span @click="addScheduleModal = true">
             <i class="el-icon-circle-plus-outline"></i>
             <a>新增</a>
           </span>
@@ -53,19 +52,19 @@
               <div>{{ (scope.row.enable == "Y") ? "是" : "否" }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="週期" prop="oneTime">
+          <el-table-column label="週期" prop="oneTime" width="100">
             <template slot-scope="scope">
-              <div>{{ scope.row.oneTime | moment("YYYY-MM-DD HH:mm:ss") }}</div>
+              <div>{{ (scope.row.oneTime == null) ? '定期' : '一次' }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="啟動 時:分">
+          <el-table-column label="啟動 時:分" width="150">
             <template slot-scope="scope">
-              <div>{{ scope.row.startTime | moment("YYYY-MM-DD HH:mm:ss") }}</div>
+              <div>{{ scope.row.startTime | moment("HH:mm") }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="完成 時:分">
+          <el-table-column label="完成 時:分" width="150">
             <template slot-scope="scope">
-              <div>{{ scope.row.endTime | moment("YYYY-MM-DD HH:mm:ss") }}</div>
+              <div>{{ scope.row.endTime | moment("HH:mm") }}</div>
             </template>
           </el-table-column>
           <el-table-column label="狀態">
@@ -73,34 +72,57 @@
               <div>{{ scope.row.status || "未執行" }}</div>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="150">
+          <el-table-column fixed="right" label="操作" width="200">
             <template slot-scope="scope">
-
               <div class="scheduleSearchPage__listBox--userFunc">
-                <el-tooltip effect="dark" content="編輯" placement="bottom">
-                  <el-button type="text">
-                    <i class="el-icon-edit"></i>
+                <el-tooltip effect="dark" content="啟動" placement="bottom">
+                  <el-button type="text" :disabled="scope.row.enable == 'Y'" @click="operateFunc('play', scope.row)">
+                    <font-awesome-icon icon="play-circle" />
+                  </el-button>
+                </el-tooltip>
+                <el-tooltip effect="dark" content="停止" placement="bottom">
+                  <el-button type="text" :disabled="scope.row.enable == 'N'" @click="operateFunc('stop', scope.row)">
+                    <font-awesome-icon icon="stop-circle" />
                   </el-button>
                 </el-tooltip>
 
                 <el-tooltip effect="dark" content="刪除" placement="bottom">
-                  <el-button type="text">
+                  <el-button type="text" @click="operateFunc('del', scope.row)">
                     <i class="el-icon-delete"></i>
                   </el-button>
                 </el-tooltip>
-
-                {{scope.row.id}}
               </div>
             </template>
           </el-table-column>
         </el-table>
       </div>
+
+      <Page :listNum="listNum" :getPageSize="listQuery.PageSize" @handleSizeChange="handleSizeChange" @handleCurrentChange="handleCurrentChange" />
     </div>
+
+    <!-- modal -->
+    <!-- 新增排程 -->
+    <el-dialog title="新增排程" :visible.sync="addScheduleModal" width="40%" center>
+      <div class="scheduleSearchPage__modal">
+        <el-button type="primary">
+          <router-link :to="{name: 'scheduleSetting'}">新增排程設定</router-link>
+        </el-button>
+        <el-button type="primary">
+          <router-link :to="{name: 'manualExecute'}">新增手動執行</router-link>
+        </el-button>
+        <el-button type="primary">
+          <router-link :to="{name: 'backtrackAnalysis'}">新增回朔分析</router-link>
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import Page from "../../components/Page.vue";
+
 export default {
+  components: { Page },
   data() {
     return {
       listQuery: {
@@ -112,6 +134,9 @@ export default {
       },
       tableData: [],
       openSearchBox: true,
+      listNum: null,
+      /* modal */
+      addScheduleModal: false,
     };
   },
   computed: {
@@ -135,16 +160,92 @@ export default {
     },
   },
   methods: {
-    searchSchedule() {},
-    handleSelectionChange() {},
+    searchSchedule() {
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    },
+    handleSizeChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.pageSize = val;
+      this.getlList();
+    },
+    handleCurrentChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.page = val;
+      this.getlList();
+    },
+    operateFunc(val, item) {
+      switch (val) {
+        case "play":
+          this.$confirm("確定要啟動此排程嗎？", "提示", {
+            confirmButtonText: "確定",
+            cancelButtonText: "取消",
+            type: "warning",
+          })
+            .then(() => {
+              this.updateSchedule(item, "Y");
+            })
+            .catch(() => {});
+          break;
+        case "stop":
+          this.$confirm("確定要停止此排程嗎？", "提示", {
+            confirmButtonText: "確定",
+            cancelButtonText: "取消",
+            type: "warning",
+          })
+            .then(() => {
+              this.updateSchedule(item, "N");
+            })
+            .catch(() => {});
+          break;
+        case "del":
+          this.$confirm("確定要刪除此排程嗎？", "提示", {
+            confirmButtonText: "確定",
+            cancelButtonText: "取消",
+            type: "warning",
+          })
+            .then(() => {
+              this.delSchedule(item.id);
+            })
+            .catch(() => {});
+          break;
+      }
+    },
+    updateSchedule(item, status) {
+      item.enable = status;
+      this.$api.updateSchedule(item).then((res) => {
+        this.$notify({
+          title: "成功",
+          message: "更新成功！",
+          type: "success",
+        });
+      });
+    },
+    delSchedule(id) {
+      this.$store.dispatch("loadingHandler", true);
+      const delInfo = {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        id: id,
+      };
+      this.$api.deleteSchedule(delInfo).then((res) => {
+        this.$notify({
+          title: "成功",
+          message: "刪除成功！",
+          type: "success",
+        });
+        this.getList();
+      });
+    },
     getList() {
       this.$api.getScheduleList(this.listQuery).then((res) => {
-        console.log(res.data);
         this.tableData = res.data;
+        this.listNum = res.data.count;
+        this.$store.dispatch("loadingHandler", false);
       });
     },
   },
   mounted() {
+    this.$store.dispatch("loadingHandler", true);
     this.getList();
   },
 };
@@ -223,7 +324,7 @@ export default {
 
     &--info {
       width: 100%;
-      padding: 0 30px;
+      padding: 0 30px 20px 30px;
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -239,10 +340,6 @@ export default {
           letter-spacing: 2px;
           font-size: 18px;
           white-space: nowrap;
-        }
-
-        p {
-          margin: 0;
         }
       }
 
@@ -271,12 +368,33 @@ export default {
     }
 
     &--userFunc {
-      i {
+      i,
+      svg {
         font-size: 20px;
         transition: 0.3s;
         &:hover {
           transform: scale(1.2);
         }
+      }
+    }
+  }
+
+  &__modal {
+    width: 100%;
+    padding: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex-flow: wrap;
+
+    button {
+      margin-bottom: 16px;
+      a {
+        color: white;
+        font-weight: bold;
+        text-decoration: none;
+        letter-spacing: 2px;
+        font-size: 18px;
       }
     }
   }

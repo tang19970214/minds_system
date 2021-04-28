@@ -10,8 +10,8 @@
     <div class="analysisFrom">
       <label>分析來源：</label>
       <el-select v-model="listQuery.Source">
-        <el-option label="全部" :value="0"></el-option>
-        <el-option label="新聞" :value="1"></el-option>
+        <el-option label="全部" value="0"></el-option>
+        <el-option label="新聞" value="1"></el-option>
       </el-select>
     </div>
 
@@ -59,20 +59,52 @@ export default {
         Type: 3,
         Name: "",
         Enable: "Y",
-        OneTime: "",
+        OneTime: null,
         sDate: "",
         eDate: "",
-        Source: 0,
+        Source: "0",
       },
       getDateRange: "",
     };
   },
   methods: {
     add() {
-      this.listQuery.sDate = moment(this.getDateRange[0]).format("YYYY-MM-DD");
-      this.listQuery.eDate = moment(this.getDateRange[1]).format("YYYY-MM-DD");
-      console.log(this.listQuery);
-      alert("尚未加入功能");
+      if (!this.getDateRange) {
+        this.$notify({
+          title: "警告",
+          message: "尚未選擇『分析日期』！",
+          type: "warning",
+        });
+      } else if (this.listQuery.Name == "") {
+        this.$notify({
+          title: "警告",
+          message: "尚未輸入『回朔名稱』！",
+          type: "warning",
+        });
+      } else {
+        this.listQuery.sDate = moment(this.getDateRange[0]).format(
+          "YYYY-MM-DD"
+        );
+        this.listQuery.eDate = moment(this.getDateRange[1]).format(
+          "YYYY-MM-DD"
+        );
+        if (!!this.listQuery.OneTime) {
+          this.listQuery.OneTime = moment(this.listQuery.OneTime).format(
+            "YYYY-MM-DDTHH:mm:ss"
+          );
+        }
+        this.$store.dispatch("loadingHandler", true);
+        this.$api.addSchedule(this.listQuery).then((res) => {
+          if (res.data) {
+            this.$notify({
+              title: "成功",
+              message: "新增成功",
+              type: "success",
+            });
+            this.$router.push("scheduleSearch");
+          }
+        });
+      }
     },
     cancel() {
       this.$confirm("確定要取消新增？", "提示", {

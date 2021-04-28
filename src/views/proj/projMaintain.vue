@@ -109,12 +109,6 @@ export default {
     return {
       allUserList: [],
       openSearchBox: true,
-      // listQuery: {
-      //   UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
-      //   TopicId: 16,
-      //   Page: 1,
-      //   PageSize: 10,
-      // },
       tableData: [],
       multipleSelection: [],
       /* 專卷分類 */
@@ -537,7 +531,6 @@ export default {
     this.$store.dispatch("loadingHandler", true);
     this.getUser();
     this.getProjSort();
-    // this.getList();
   },
 };
 </script>
