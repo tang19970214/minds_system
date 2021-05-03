@@ -7,11 +7,11 @@
     <div class="instantAnalysis__card">
       <strong class="instantAnalysis__card--title">分析結果：</strong>
 
-      <div class="instantAnalysis__card--keyWord">
+      <!-- <div class="instantAnalysis__card--keyWord">
         <strong>關鍵字：</strong>
         <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
         <a v-if="queries.length > 0" @click="queries = []">清空</a>
-      </div>
+      </div> -->
 
       <el-row>
         <el-col :span="14">
@@ -32,7 +32,7 @@
             </div>
 
             <div class="newsContent">
-              <text-highlight :queries="queries">{{ getAnalysisContent }}</text-highlight>
+              <text-highlight :class="ChangeHighlightBG(tagName)" :queries="queries">{{ getAnalysisContent }}</text-highlight>
             </div>
           </div>
         </el-col>
@@ -105,6 +105,7 @@ export default {
         { id: 4, title: "組織", value: "Org" },
       ],
       queries: [],
+      tagName: "",
 
       collapseList: null,
       enterAnalysis: false,
@@ -129,6 +130,24 @@ export default {
             break;
         }
         return setBG;
+      };
+    },
+    ChangeHighlightBG() {
+      return (val) => {
+        switch (val) {
+          case "Nation":
+            return "nation";
+            break;
+          case "Place":
+            return "place";
+            break;
+          case "TitlePeople":
+            return "titlePeople";
+            break;
+          case "Org":
+            return "org";
+            break;
+        }
       };
     },
   },
@@ -166,6 +185,7 @@ export default {
           break;
       }
       this.queries = setKeyWord;
+      this.tagName = val;
     },
   },
   mounted() {
@@ -212,32 +232,32 @@ export default {
       font-size: 26px;
     }
 
-    &--keyWord {
-      width: 100%;
-      margin-top: 16px;
-      display: flex;
-      align-items: center;
+    // &--keyWord {
+    //   width: 100%;
+    //   margin-top: 16px;
+    //   display: flex;
+    //   align-items: center;
 
-      p {
-        margin: 0;
-        padding-right: 8px;
+    //   p {
+    //     margin: 0;
+    //     padding-right: 8px;
 
-        // &::after {
-        //   content: "、";
-        // }
+    //     // &::after {
+    //     //   content: "、";
+    //     // }
 
-        // &:last-child {
-        //   background: crimson;
-        // }
-      }
+    //     // &:last-child {
+    //     //   background: crimson;
+    //     // }
+    //   }
 
-      a {
-        font-size: 10px;
-        color: cornflowerblue;
-        text-decoration: underline;
-        cursor: pointer;
-      }
-    }
+    //   a {
+    //     font-size: 10px;
+    //     color: cornflowerblue;
+    //     text-decoration: underline;
+    //     cursor: pointer;
+    //   }
+    // }
 
     &--result {
       position: relative;
@@ -287,6 +307,19 @@ export default {
         box-sizing: border-box;
         overflow-wrap: break-word;
         line-height: 1.5rem;
+
+        .nation > mark {
+          background: rgb(187, 255, 255) !important;
+        }
+        .place > mark {
+          background: rgb(187, 255, 187) !important;
+        }
+        .titlePeople > mark {
+          background: rgb(255, 255, 206) !important;
+        }
+        .org > mark {
+          background: rgb(255, 217, 236) !important;
+        }
       }
     }
 

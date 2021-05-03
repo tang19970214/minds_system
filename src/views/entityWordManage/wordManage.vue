@@ -63,8 +63,7 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="55"></el-table-column>
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
         <el-table-column type="index" label="序號" width="60"></el-table-column>
         <el-table-column label="實體詞分類">
           {{getEntity(listQuery.EntityTypeId)}}
@@ -134,7 +133,6 @@ export default {
       entityList: [],
 
       tableData: [],
-      multipleSelection: [],
 
       openAddWordManage: false,
       addWordManage: {
@@ -214,9 +212,6 @@ export default {
       } else {
         this.$refs.multipleTable.clearSelection();
       }
-    },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
     },
   },
   mounted() {

@@ -113,7 +113,8 @@ body {
     }
 
     &:hover {
-        opacity: .8 !important;
+        // background: lighten($mainColor, 10%) !important;
+        opacity: .9 !important;
     }
 }
 

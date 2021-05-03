@@ -29,7 +29,7 @@
           <el-table-column label="專卷主題">
             <template slot-scope="scope">
               <el-button @click="chooseTheme(scope.row.name)" type="text" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">
-                <b :class="{'body__projTheme--active':getTheme.name == scope.row.name}">{{scope.row.name}}</b>
+                <b :class="{'projEdit__projTheme--active':getTheme.name == scope.row.name}">{{scope.row.name}}</b>
               </el-button>
             </template>
           </el-table-column>
@@ -103,7 +103,7 @@
 
       <div class="projEdit__rightBox--contentBox">
         <div class="relationBtn">
-          <span @click="openSearchRelation = true">
+          <span @click="openSearchRelationModal()">
             <i class="el-icon-search"></i>
             <strong>搜尋關聯分析內容</strong>
           </span>
@@ -191,19 +191,6 @@
           <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
           <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
           <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
-
-          <!-- <el-table-column type="selection" width="50"></el-table-column>
-          <el-table-column label="新聞標題" prop="newsTitle">
-          </el-table-column>
-          <el-table-column label="新聞時間" width="150">
-            <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
-          </el-table-column>
-          <el-table-column label="新聞網站" prop="newsUrl">
-          </el-table-column>
-          <el-table-column label="新聞頻道" prop="newsChannel" width="100">
-          </el-table-column>
-          <el-table-column label="情緒指標" prop="sentiment" width="100">
-          </el-table-column> -->
         </el-table>
 
         <Page :listNum="listNum" :getPageSize="newsListQuery.pageSize" @handleSizeChange="handleSizeChange" @handleCurrentChange="handleCurrentChange" />
@@ -263,7 +250,7 @@ export default {
         remark: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
       },
       // 關聯分析modal
-      openSearchRelation: false,
+      openSearchRelation: true,
       searchList: [],
       searchRelation: {
         dateRange: "",
@@ -354,6 +341,7 @@ export default {
       } else {
         this.rightBoxData = {};
       }
+      this.getTheme = "";
       this.getRelationList();
     },
     /* 選擇專卷主題並帶入現有分析內容 */
@@ -361,7 +349,7 @@ export default {
       this.$store.dispatch("loadingHandler", true);
       /* 檢查是否已選擇主題 */
       const getNews = this.relationList.filter((resp) => resp.value !== "主題");
-      const getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
+      this.getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
         (res) => res.name == val
       )[0];
 
@@ -521,6 +509,17 @@ export default {
     },
 
     // 搜尋關聯分析內容modal
+    /* 開啟 */
+    openSearchRelationModal() {
+      console.log(this.copyRelationValue);
+      let getArr = this.tableData.filter((res) =>
+        this.copyRelationValue.includes(res.id)
+      );
+      getArr.forEach((item) => {
+        this.$refs.multipleTable.toggleRowSelection(item);
+      });
+      this.openSearchRelation = true;
+    },
     /* 取得搜尋來源資料 */
     getSearchList() {
       const searchQuery = {
@@ -571,6 +570,38 @@ export default {
     join() {
       if (this.multipleSelection.length > 0) {
         this.$store.dispatch("loadingHandler", true);
+        let chooseData = [];
+        let chooseIDX = [];
+        this.multipleSelection.forEach((res) => {
+          let getItems = {
+            key: res.id,
+            label: res.newsTitle,
+            value: res.source,
+            disabled: !!this.getTheme ? false : true,
+          };
+          chooseData.push(getItems);
+          chooseIDX.push(res.id);
+          this.copyRelationValue = chooseIDX;
+        });
+        console.log({ 新資料: chooseData, 新key: chooseIDX });
+        this.relationList = chooseData;
+        this.relationValue = chooseIDX;
+        this.openSearchRelation = false;
+        this.$store.dispatch("loadingHandler", false);
+      } else {
+        this.$notify({
+          title: "警告",
+          message: "請至少選擇一筆資料！",
+          type: "warning",
+        });
+      }
+      this.$refs.multipleTable.clearSelection();
+
+      return;
+
+      /* --------------------- */
+      if (this.multipleSelection.length > 0) {
+        this.$store.dispatch("loadingHandler", true);
         this.$router.push({
           name: "projEdit",
           query: {
@@ -591,6 +622,7 @@ export default {
   },
   async mounted() {
     this.$store.dispatch("loadingHandler", true);
+    this.openSearchRelation = false;
     this.getProjSortList();
     this.getSearchList();
     await this.getNewsList();
@@ -776,25 +808,25 @@ export default {
   //       }
   //     }
 
-  //     &__projTheme {
-  //       width: 100%;
-  //       padding-top: 32px;
+  &__projTheme {
+    width: 100%;
+    padding-top: 32px;
 
-  //       b {
-  //         color: #191970;
-  //         font-size: 18px;
-  //         transition: 0.4s;
+    b {
+      color: #191970;
+      font-size: 18px;
+      transition: 0.4s;
 
-  //         &:hover {
-  //           color: #00abb9;
-  //           letter-spacing: 2px;
-  //         }
-  //       }
+      &:hover {
+        color: #00abb9;
+        letter-spacing: 2px;
+      }
+    }
 
-  //       &--active {
-  //         color: #00abb9 !important;
-  //       }
-  //     }
+    &--active {
+      color: #00abb9 !important;
+    }
+  }
   //   }
 
   //   &--shrinkLeftBox {

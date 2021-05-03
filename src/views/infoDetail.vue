@@ -12,9 +12,9 @@
           <div class="detailPage__leftBox--newsContent">
             <div class="markKeyWord">
               <div class="markKeyWord__title">
-                <strong>關鍵字：</strong>
+                <!-- <strong>關鍵字：</strong>
                 <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
-                <a v-if="queries.length > 0" @click="queries = []">清空</a>
+                <a v-if="queries.length > 0" @click="queries = []">清空</a> -->
               </div>
 
               <div class="markKeyWord__markIcon">
@@ -33,7 +33,7 @@
               </div>
             </div>
 
-            <text-highlight :queries="queries">{{ detailList.newsContent }}</text-highlight>
+            <text-highlight :class="ChangeHighlightBG(tagName)" :queries="queries">{{ detailList.newsContent }}</text-highlight>
           </div>
         </div>
       </el-col>
@@ -62,8 +62,8 @@
     </el-row>
 
     <div class="detailPage__footer">
-      <el-button type="primary">加入分析專卷</el-button>
-      <el-button type="primary" @click="closeDetail">關閉</el-button>
+      <el-button type="primary" @click="joinProjEdit()">加入分析專卷</el-button>
+      <el-button type="primary" @click="closeDetail()">關閉</el-button>
     </div>
   </div>
 </template>
@@ -84,6 +84,7 @@ export default {
         { id: 4, title: "組織", value: "Org" },
       ],
       collapseList: null,
+      tagName: "",
       queries: [],
     };
   },
@@ -93,19 +94,37 @@ export default {
         let setBG = "";
         switch (id) {
           case 1:
-            setBG = "#FFFFCE";
+            setBG = "#BBFFFF";
             break;
           case 2:
-            setBG = "#FFD9EC";
-            break;
-          case 3:
             setBG = "#BBFFBB";
             break;
+          case 3:
+            setBG = "#FFFFCE";
+            break;
           case 4:
-            setBG = "#BBFFFF";
+            setBG = "#FFD9EC";
             break;
         }
         return setBG;
+      };
+    },
+    ChangeHighlightBG() {
+      return (val) => {
+        switch (val) {
+          case "Nation":
+            return "nation";
+            break;
+          case "Place":
+            return "place";
+            break;
+          case "TitlePeople":
+            return "titlePeople";
+            break;
+          case "Org":
+            return "org";
+            break;
+        }
       };
     },
   },
@@ -147,6 +166,15 @@ export default {
           break;
       }
       this.queries = setKeyWord;
+      this.tagName = val;
+    },
+    /* 加入專卷分析 */
+    joinProjEdit() {
+      let routeUrl = this.$router.resolve({
+        name: "projEdit",
+        query: { chooseID: JSON.stringify([this.detailList.id]) },
+      });
+      window.open(routeUrl.href, "_blank");
     },
     closeDetail() {
       this.$confirm("確定要關閉此頁面嗎？", "提示", {
@@ -270,6 +298,19 @@ export default {
               }
             }
           }
+        }
+
+        .nation > mark {
+          background: rgb(187, 255, 255) !important;
+        }
+        .place > mark {
+          background: rgb(187, 255, 187) !important;
+        }
+        .titlePeople > mark {
+          background: rgb(255, 255, 206) !important;
+        }
+        .org > mark {
+          background: rgb(255, 217, 236) !important;
         }
       }
     }

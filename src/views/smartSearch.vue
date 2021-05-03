@@ -52,6 +52,8 @@
         <el-table-column label="新聞頻道" prop="newsChannel" width="100"></el-table-column>
         <el-table-column label="情緒指標" prop="sentiment" width="100"></el-table-column>
       </el-table>
+
+      <Page :listNum="listNum" :getPageSize="listQuery.pageSize" @handleSizeChange="handleSizeChange" @handleCurrentChange="handleCurrentChange" />
     </div>
   </div>
 </template>
@@ -59,7 +61,10 @@
 <script>
 import moment from "moment";
 
+import Page from "../components/Page.vue";
+
 export default {
+  components: { Page },
   data() {
     return {
       listQuery: {
@@ -79,6 +84,9 @@ export default {
       searchList: [],
       tableData: [],
       multipleSelection: [],
+
+      /* page */
+      listNum: null,
     };
   },
   methods: {
@@ -97,6 +105,7 @@ export default {
     async getList() {
       await this.$api.getNewsList(this.listQuery).then((res) => {
         this.tableData = res.data.data;
+        this.listNum = res.data.count;
         this.$store.dispatch("loadingHandler", false);
       });
     },
@@ -163,6 +172,18 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
+    },
+
+    /* 換頁鈕 */
+    handleSizeChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.pageSize = val;
+      this.getList();
+    },
+    handleCurrentChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.page = val;
+      this.getList();
     },
   },
   mounted() {

@@ -94,36 +94,70 @@
     <!-- 新增實體 -->
     <el-dialog title="新增實體" :visible.sync="entityModal" width="50%" center>
       <el-form :model="entityList" :rules="entityRules" ref="ruleForm_entityModal" label-width="120px">
+        <!-- 實體分類 -->
         <el-form-item label="實體分類" prop="CatId">
           <el-select v-model="entityList.CatId" placeholder="請選擇實體分類">
             <el-option label="請選擇" value=""></el-option>
             <el-option :label="item.name" :value="item.id" v-for="item in entitySortData" :key="item.id"></el-option>
           </el-select>
         </el-form-item>
+        <!-- 實體名稱 -->
         <el-form-item label="實體名稱" prop="CustPosName">
           <el-input v-model="entityList.CustPosName"></el-input>
         </el-form-item>
+        <!-- 設定方式 -->
         <div class="entityManagePage__entityModal">
           <label>設定方式</label>
           <div class="entityManagePage__entityModal--tab">
             <el-tabs class="w-full" type="border-card">
+              <!-- 上傳檔案 -->
               <el-tab-pane label="上傳檔案">
                 <div class="uploadFiles">
-                  <!-- <label>上傳檔案</label> -->
                   <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
                     <el-button size="small" type="primary">上傳</el-button>
-                    <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
                   </el-upload>
+
+                  <!-- <el-upload ref="imageUpload" class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" accept=".png,.jpg,.jpeg,.svg,.pdf" :http-request="customUpload" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" :limit="5" :on-exceed="handleExceed" :file-list="fileList">
+                    <el-button size="small" type="primary">上傳</el-button>
+                  </el-upload> -->
+
                 </div>
               </el-tab-pane>
-              <el-tab-pane label="自訂正則表達式">自訂正則表達式</el-tab-pane>
+              <!-- 自訂正則表達式 -->
+              <el-tab-pane label="自訂正則表達式">
+                <div class="regularExpress">
+                  <el-row class="regularExpress__title">
+                    <el-col :span="6">
+                      <label>正則表達式：</label>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-input v-model="regularText"></el-input>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-button type="primary" @click="addRegular()">新增</el-button>
+                    </el-col>
+                  </el-row>
+
+                  <el-row class="regularExpress__content">
+                    <el-col :span="18">
+                      <div class="regularExpress__content--param">{{entityList.Param}}</div>
+                      <!-- <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 6}" v-model="entityList.Param"></el-input> -->
+                    </el-col>
+                    <el-col :span="6">
+                      <el-button type="primary" @click="removeRegular()">移除</el-button>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-tab-pane>
             </el-tabs>
           </div>
         </div>
+        <!-- 啟動 -->
         <el-form-item label="啟動" prop="CustPosName">
           <el-radio v-model="entityList.Enable" :label="1">是</el-radio>
           <el-radio v-model="entityList.Enable" :label="0">否</el-radio>
         </el-form-item>
+        <!-- 備註 -->
         <el-form-item label="備註" prop="Memo">
           <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 6}" v-model="entityList.Memo">
           </el-input>
@@ -172,6 +206,7 @@ export default {
         Memo: "",
         CreatedUser: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         FileName: "",
+        Param: "",
       },
       entityRules: {},
       fileList: [
@@ -186,6 +221,7 @@ export default {
             "https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100",
         },
       ],
+      regularText: "",
     };
   },
   methods: {
@@ -375,14 +411,42 @@ export default {
       console.log(file);
     },
     handleExceed(files, fileList) {
-      this.$message.warning(
-        `当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${
-          files.length + fileList.length
-        } 个文件`
-      );
+      this.$message.warning("最多只能上傳3個檔案！");
     },
     beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`);
+      return this.$confirm(`確定要移除 ${file.name}？`, "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      });
+    },
+    // customUpload(file) {
+    //   console.log(file);
+    // },
+    addRegular() {
+      if (!!this.regularText) {
+        const regularArr = [];
+        if (!this.entityList.Param) {
+          regularArr.push(JSON.stringify(this.regularText));
+          this.entityList.Param = regularArr[0];
+          console.log(regularArr);
+          this.regularText = "";
+        } else {
+          let newStr =
+            this.entityList.Param + "、" + JSON.stringify(this.regularText);
+          this.entityList.Param = newStr;
+          this.regularText = "";
+        }
+      } else {
+        this.$notify({
+          title: "警告",
+          message: "請輸入正則表達式！",
+          type: "warning",
+        });
+      }
+    },
+    removeRegular() {
+      console.log(this.entityList.Param);
     },
   },
   mounted() {
@@ -535,6 +599,43 @@ export default {
           color: #2d2d2d;
           padding: 0;
           font-size: 14px;
+        }
+      }
+
+      .regularExpress {
+        &__title {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          padding-bottom: 16px;
+
+          label {
+            color: #2d2d2d;
+            font-size: 16px;
+          }
+
+          .el-col:last-child {
+            text-align: center;
+          }
+        }
+
+        &__content {
+          width: 100%;
+          display: flex;
+          align-items: center;
+
+          .el-col:last-child {
+            text-align: center;
+          }
+
+          &--param {
+            width: 100%;
+            min-height: 126px;
+            padding: 16px;
+            box-sizing: border-box;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+          }
         }
       }
     }

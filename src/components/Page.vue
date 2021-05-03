@@ -7,7 +7,7 @@
       <el-option label="50筆/頁" :value="50"></el-option>
       <el-option label="100筆/頁" :value="100"></el-option>
     </el-select>
-    <el-pagination background layout="prev, pager, next" @current-change="handleCurrentChange" :total="listNum"></el-pagination>
+    <el-pagination background layout="prev, pager, next" @current-change="handleCurrentChange" :total="listNum" :page-size="getPageSize"></el-pagination>
   </div>
 </template>
 

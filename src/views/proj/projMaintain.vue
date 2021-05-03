@@ -43,7 +43,7 @@
         </el-col>
         <el-col :span="8">
           <div class="projMaintain__listBox--joinAnalysis">
-            <span>
+            <span @click="editProjEdit()">
               <i class="el-icon-circle-plus-outline"></i>
               <a>編輯分析專卷</a>
             </span>
@@ -190,7 +190,7 @@ export default {
         UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
         TopicId: topicId,
         Page: 1,
-        PageSize: 10,
+        PageSize: 99999,
       };
       await this.$api.getDataByTopicId(listQuery).then((res) => {
         this.tableData = res.data;
@@ -512,6 +512,26 @@ export default {
         (resp) => resp.name == this.projTheme
       )[0];
       this.getList(this.projThemeInfo.id);
+    },
+
+    // 編輯分析專卷
+    editProjEdit() {
+      if (this.multipleSelection.length > 0) {
+        const dataID = [];
+        this.multipleSelection.forEach((element) => {
+          dataID.push(element.newsId);
+        });
+        let routeUrl = this.$router.resolve({
+          name: "projEdit",
+          query: { chooseID: JSON.stringify(dataID) },
+        });
+        window.open(routeUrl.href, "_blank");
+      } else {
+        this.$notify.error({
+          title: "錯誤",
+          message: "請選擇至少一項項目！",
+        });
+      }
     },
 
     toggleSelection(rows) {

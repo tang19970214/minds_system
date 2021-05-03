@@ -82,16 +82,16 @@ export default {
     handleSizeChange(val) {
       this.$store.dispatch("loadingHandler", true);
       this.listQuery.PageSize = val;
-      this.getlList();
+      this.getList();
     },
     handleCurrentChange(val) {
       this.$store.dispatch("loadingHandler", true);
       this.listQuery.Page = val;
-      this.getlList();
+      this.getList();
     },
     async getList() {
       await this.$api.getUserLogin(this.listQuery).then((res) => {
-        this.tableData = res.data;
+        this.tableData = res.data.data;
         this.listNum = res.data.count;
         this.$store.dispatch("loadingHandler", false);
       });
