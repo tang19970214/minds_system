@@ -113,13 +113,13 @@
               <!-- 上傳檔案 -->
               <el-tab-pane label="上傳檔案">
                 <div class="uploadFiles">
-                  <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
-                    <el-button size="small" type="primary">上傳</el-button>
-                  </el-upload>
-
-                  <!-- <el-upload ref="imageUpload" class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" accept=".png,.jpg,.jpeg,.svg,.pdf" :http-request="customUpload" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" :limit="5" :on-exceed="handleExceed" :file-list="fileList">
+                  <!-- <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
                     <el-button size="small" type="primary">上傳</el-button>
                   </el-upload> -->
+
+                  <el-upload ref="imageUpload" class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" accept=".png,.jpg,.jpeg,.svg,.pdf" :http-request="customUpload" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" :limit="1" :on-exceed="handleExceed" :file-list="fileList">
+                    <el-button size="small" type="primary">上傳</el-button>
+                  </el-upload>
 
                 </div>
               </el-tab-pane>
@@ -174,6 +174,8 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
@@ -209,18 +211,7 @@ export default {
         Param: "",
       },
       entityRules: {},
-      fileList: [
-        {
-          name: "food.jpeg",
-          url:
-            "https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100",
-        },
-        {
-          name: "food2.jpeg",
-          url:
-            "https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100",
-        },
-      ],
+      fileList: [],
       regularText: "",
     };
   },
@@ -420,9 +411,23 @@ export default {
         type: "warning",
       });
     },
-    // customUpload(file) {
-    //   console.log(file);
-    // },
+    customUpload(file) {
+      const vm = this;
+      let formData = new FormData();
+      formData.append("files", file.file, file.file.name);
+      this.$api
+        .upload(formData)
+        .then((res) => {
+          const fileInfo = {
+            name: res.data.dbPath,
+            url: "http://msapi.autoware.com.tw/" + res.data.dbPath,
+          };
+          this.fileList.push(fileInfo);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     addRegular() {
       if (!!this.regularText) {
         const regularArr = [];

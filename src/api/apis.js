@@ -1,3 +1,6 @@
+import {
+  Upload
+} from "element-ui";
 import req from "./https";
 
 // 全域 api 掛載於 Vue.prototype
@@ -175,6 +178,11 @@ const api = {
   /* 新增 */
   addDataTopic(data) {
     return req("post", "UserTopic/addData2Topic", data)
+  },
+
+  // 上傳
+  upload(data) {
+    return req("post", "Upload", data);
   }
 };
 
