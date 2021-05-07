@@ -57,7 +57,7 @@
 
     <div class="wordManage__listBox">
       <div class="wordManage__listBox--add">
-        <span @click="openAddWordManage = true">
+        <span @click="openAddWordManageModal()">
           <i class="el-icon-plus"></i>
           <a>新增</a>
         </span>
@@ -68,13 +68,14 @@
         <el-table-column label="實體詞分類">
           {{getEntity(listQuery.EntityTypeId)}}
         </el-table-column>
-        <el-table-column label="實體詞名稱" prop="term"></el-table-column>
+        <el-table-column label="關鍵字" prop="term"></el-table-column>
+        <el-table-column label="詞頻" prop="termTypeId"></el-table-column>
         <el-table-column label="備註" prop="memo"></el-table-column>
         <el-table-column fixed="right" label="操作" width="200">
           <template slot-scope="scope">
             <div>
               <el-tooltip effect="dark" content="編輯" placement="bottom">
-                <el-button type="text" @click="editWordManage(scope.row)">
+                <el-button type="text" @click="editWordManageModal(scope.row)">
                   <i class="el-icon-edit"></i>
                 </el-button>
               </el-tooltip>
@@ -88,19 +89,21 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <Page :listNum="listNum" :getPageSize="listQuery.PageSize" @handleSizeChange="handleSizeChange" @handleCurrentChange="handleCurrentChange" />
     </div>
 
     <!-- modal -->
-    <el-dialog class="addWordManageModal" title="新增實體詞" :visible.sync="openAddWordManage" width="50%" center>
+    <el-dialog class="addWordManageModal" :title="'新增' + addWordManageTitle" :visible.sync="openAddWordManage" width="50%" center>
       <el-form :model="addWordManage" :rules="rules_openAddWordManage" ref="ruleForm_openAddWordManage" label-width="130px">
         <el-form-item label="詞庫類別">
-          <strong>實體詞</strong>
+          <strong>{{addWordManageTitle}}</strong>
         </el-form-item>
-        <el-form-item label="實體詞分類" prop="Term">
-          <el-input v-model="addWordManage.Term"></el-input>
+        <el-form-item :label="addWordManageTitle + '分類'" prop="Name">
+          <el-input v-model="addWordManage.Name"></el-input>
         </el-form-item>
-        <el-form-item label="備註" prop="memo">
-          <el-input type="textarea" v-model="addWordManage.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
+        <el-form-item label="備註" prop="Memo">
+          <el-input type="textarea" v-model="addWordManage.Memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
         </el-form-item>
       </el-form>
 
@@ -110,13 +113,34 @@
       </span>
     </el-dialog>
 
+    <el-dialog class="editWordManageModal" title="編輯詞庫" :visible.sync="openEditWordManage" width="50%" center>
+      <el-form :model="editWordManage" :rules="rules_openEditWordManage" ref="ruleForm_openEditWordManage" label-width="130px">
+        <el-form-item label="詞庫類別">
+          <strong>{{editWordManage.termTypeId}}</strong>
+        </el-form-item>
+        <el-form-item :label="editWordManageTitle + '分類'" prop="term">
+          <el-input v-model="editWordManage.term"></el-input>
+        </el-form-item>
+        <el-form-item label="備註" prop="memo">
+          <el-input type="textarea" v-model="editWordManage.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="editEntity()">新增</el-button>
+        <el-button type="danger" @click="openEditWordManage = false">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import moment from "moment";
 
+import Page from "../../components/Page.vue";
+
 export default {
+  components: { Page },
   data() {
     return {
       openSearchBox: true,
@@ -128,25 +152,36 @@ export default {
         EntityTypeId: 0, // 選擇實體詞分類
         sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
         eDate: moment().format("YYYY-MM-DD"),
+        Page: 1,
+        PageSize: 10,
       },
       wordClassList: [],
       entityList: [],
-
       tableData: [],
 
+      /* page component */
+      listNum: null,
+
+      /* add Modal */
       openAddWordManage: false,
       addWordManage: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        OrgId: 1,
-        Term: "",
-        POS: 128,
-        Freq: 20000,
-        TermTypeId: 3,
-        EntityTypeId: "",
-        memo: "",
+        TermTypeId: "",
+        Name: "",
+        Memo: "",
       },
+      addWordManageTitle: "",
       rules_openAddWordManage: {
-        Term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        Name: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        Memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
+
+      /* edit Modal */
+      openEditWordManage: false,
+      editWordManage: {},
+      editWordManageTitle: "",
+      rules_openEditWordManage: {
+        term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
         memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
       },
     };
@@ -188,8 +223,8 @@ export default {
     },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
-        console.log(res);
         this.tableData = res.data;
+        this.listNum = res.data.count;
         this.$store.dispatch("loadingHandler", false);
       });
     },
@@ -199,11 +234,111 @@ export default {
       this.$store.dispatch("loadingHandler", true);
       this.getList();
     },
-    addEntity() {
-      console.log(this.addWordManage);
+    /* 開啟新增詞庫類別modal */
+    openAddWordManageModal() {
+      if (!this.listQuery.TermTypeId) {
+        this.$notify({
+          title: "警告",
+          message: "請選擇欲新增之詞庫類別",
+          type: "warning",
+        });
+      } else {
+        this.addWordManageTitle = this.wordClassList.filter(
+          (res) => res.id == this.listQuery.TermTypeId
+        )[0].termName;
+        this.openAddWordManage = true;
+      }
     },
-    editWordManage(data) {},
-    delWordManage(data) {},
+    addEntity() {
+      this.$refs.ruleForm_openAddWordManage.validate((valid) => {
+        if (valid) {
+          this.$store.dispatch("loadingHandler", true);
+          this.addWordManage.TermTypeId = this.listQuery.TermTypeId;
+          this.$api.addCat(this.addWordManage).then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: "成功",
+                message: "新增成功",
+                type: "success",
+              });
+            } else {
+              this.$notify({
+                title: "錯誤",
+                message: "未知的錯誤",
+                type: "error",
+              });
+            }
+            this.openAddWordManage = false;
+            this.getList();
+          });
+        }
+      });
+    },
+    /* 編輯列表modal */
+    editWordManageModal(data) {
+      console.log(data);
+      this.editWordManage = data;
+      this.openEditWordManage = true;
+    },
+    editEntity() {
+      this.$refs.ruleForm_openEditWordManage.validate((valid) => {
+        if (valid) {
+          this.$store.dispatch("loadingHandler", true);
+          this.$api.updateCat(this.editWordManage).then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: "成功",
+                message: "新增成功",
+                type: "success",
+              });
+            } else {
+              this.$notify({
+                title: "錯誤",
+                message: "未知的錯誤",
+                type: "error",
+              });
+            }
+            this.openEditWordManage = false;
+            this.getList();
+          });
+        }
+      });
+    },
+    delWordManage(item) {
+      this.$confirm("確定要刪除『" + item.term + "』嗎?", "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          this.$store.dispatch("loadingHandler", true);
+          const delQuery = {
+            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+            Id: item.id,
+          };
+          this.$api.deleteCat(delQuery).then((res) => {
+            if (res.data) {
+              this.$message({
+                type: "success",
+                message: "删除成功!",
+              });
+            } else {
+              this.$notify({
+                title: "錯誤",
+                message: "未知的錯誤",
+                type: "error",
+              });
+            }
+            this.getList();
+          });
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -212,6 +347,17 @@ export default {
       } else {
         this.$refs.multipleTable.clearSelection();
       }
+    },
+    /* 換頁鈕 */
+    handleSizeChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.PageSize = val;
+      this.getList();
+    },
+    handleCurrentChange(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.listQuery.Page = val;
+      this.getList();
     },
   },
   mounted() {

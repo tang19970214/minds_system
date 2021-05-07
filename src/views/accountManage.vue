@@ -34,7 +34,7 @@
                 </el-button>
               </el-tooltip>
             </div>
-            <el-button type="text" size="small" @click.native.prevent="changePWD(scope.$index, scope.row)" v-else>
+            <el-button type="text" size="small" @click.native.prevent="changePWDModal(scope.row.id)" v-else>
               變更密碼
             </el-button>
           </template>
@@ -97,7 +97,7 @@
       </el-form>
 
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="changePWD_func = false">儲存</el-button>
+        <el-button type="primary" @click="changePWD()">儲存</el-button>
         <el-button type="danger" @click="changePWD_func = false">取消</el-button>
       </span>
     </el-dialog>
@@ -165,6 +165,7 @@ export default {
       },
       /* 變更密碼 */
       changePWD_func: false,
+      changePWDID: "",
       ruleForm: {
         oldPWD: "",
         newPWD: "",
@@ -254,9 +255,31 @@ export default {
           break;
       }
     },
-    changePWD(idx, item) {
-      console.log(idx, item);
+    changePWDModal(id) {
+      this.changePWDID = id;
       this.changePWD_func = true;
+    },
+    changePWD() {
+      const vm = this;
+      vm.$refs.ruleForm.validate((valid) => {
+        if (valid) {
+          const pwdQuery = {
+            Id: this.changePWDID,
+            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+            oldPass: vm.ruleForm.oldPWD,
+            newPass: vm.ruleForm.newPWD,
+          };
+          this.$api.updateUserPassword(pwdQuery).then((res) => {
+            console.log(res);
+            this.$notify({
+              title: "成功",
+              message: "修改成功",
+              type: "success",
+            });
+            this.changePWD_func = false;
+          });
+        }
+      });
     },
     addUser() {
       const vm = this;

@@ -39,32 +39,40 @@ export default {
   },
   methods: {
     async login() {
-      this.$store.dispatch("loadingHandler", true);
-      const info = {
-        name: this.userInfo.account,
-        pass: this.userInfo.password,
-        SessionId: "",
-        SourceIP: "",
-      };
-      await this.$api.login(info).then((res) => {
-        if (res.data.message == null) {
-          this.setUserInfo(res.data);
-          this.setUniMenu();
-          this.$notify({
-            title: "成功",
-            message: "登入成功!",
-            type: "success",
-          });
-          this.$store.dispatch("loadingHandler", false);
-          this.$router.push("/Home");
-        } else {
-          this.$notify.error({
-            title: "錯誤",
-            message: res.data.message,
-          });
-          this.userInfo = {};
-        }
-      });
+      if (!!this.userInfo.account && !!this.userInfo.password) {
+        this.$store.dispatch("loadingHandler", true);
+        const info = {
+          name: this.userInfo.account,
+          pass: this.userInfo.password,
+          SessionId: "",
+          SourceIP: "",
+        };
+        await this.$api.login(info).then((res) => {
+          if (res.data.message == null) {
+            this.setUserInfo(res.data);
+            this.setUniMenu();
+            this.$notify({
+              title: "成功",
+              message: "登入成功!",
+              type: "success",
+            });
+            this.$store.dispatch("loadingHandler", false);
+            this.$router.push("/Home");
+          } else {
+            this.$notify.error({
+              title: "錯誤",
+              message: res.data.message,
+            });
+            this.userInfo = {};
+            this.$store.dispatch("loadingHandler", false);
+          }
+        });
+      } else {
+        this.$notify.error({
+          title: "錯誤",
+          message: "請確實輸入帳號或密碼！",
+        });
+      }
     },
     setUserInfo(data) {
       window.localStorage.userInfo = JSON.stringify(data);

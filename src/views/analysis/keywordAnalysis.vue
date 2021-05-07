@@ -11,16 +11,17 @@
             <div class="sDate__title">
               <label>分析來源：</label>
             </div>
-            <el-select v-model="listQuery.TermTypeId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
+            <el-select v-model="listQuery.TermTypeId" placeholder="請選擇詞庫類別" no-data-text="無數據">
               <el-option label="請選擇" :value="0"></el-option>
-              <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
+              <el-option label="新聞" value="新聞"></el-option>
+              <!-- <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option> -->
             </el-select>
           </div>
           <div class="eDate">
             <div class="eDate__title">
               <label>分析數量：</label>
             </div>
-            <el-input v-model="listQuery.eDate"> </el-input>
+            <el-input v-model="listQuery.PageSize"> </el-input>
           </div>
         </div>
 
@@ -29,7 +30,7 @@
             <div class="kind__title">
               <label>分析日期：</label>
             </div>
-            <el-date-picker v-model="listQuery.sDate" type="date" placeholder="請選擇開始日期" format="yyyy-MM-dd">
+            <el-date-picker v-model="daterange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
             </el-date-picker>
           </div>
 
@@ -51,8 +52,8 @@
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
         <el-table-column type="index" label="序號" width="60"></el-table-column>
-        <el-table-column label="關鍵字" prop="keyword"></el-table-column>
-        <el-table-column label="詞頻" prop="term"></el-table-column>
+        <el-table-column label="關鍵字" prop="term"></el-table-column>
+        <el-table-column label="詞頻" prop="termTypeId"></el-table-column>
         <el-table-column label="關聯關鍵字" prop="memo"></el-table-column>
       </el-table>
     </div>
@@ -95,8 +96,11 @@ export default {
         EntityTypeId: 0, // 選擇實體詞分類
         sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
         eDate: moment().format("YYYY-MM-DD"),
+        Page: 1,
+        PageSize: 10,
       },
-      wordClassList: [],
+      daterange: null,
+      // wordClassList: [],
       entityList: [],
       tableData: [],
 
@@ -132,7 +136,7 @@ export default {
           UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         })
         .then((res) => {
-          this.wordClassList = res.data;
+          // this.wordClassList = res.data;
         });
     },
     getEntityTypeList() {
@@ -145,13 +149,13 @@ export default {
         });
     },
     /* 取得所選詞庫類別 */
-    getWordClass(val) {
-      if (val == 3) {
-        this.getEntityTypeList();
-      } else {
-        this.listQuery.EntityTypeId = 0;
-      }
-    },
+    // getWordClass(val) {
+    //   if (val == 3) {
+    //     this.getEntityTypeList();
+    //   } else {
+    //     this.listQuery.EntityTypeId = 0;
+    //   }
+    // },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
         console.log(res);
@@ -160,8 +164,12 @@ export default {
       });
     },
     searchWord() {
-      this.listQuery.sDate = moment(this.listQuery.sDate).format("YYYY-MM-DD");
-      this.listQuery.eDate = moment(this.listQuery.eDate).format("YYYY-MM-DD");
+      this.listQuery.sDate = this.daterange
+        ? moment(this.daterange[0]).format("YYYY-MM-DD")
+        : moment().format("YYYY-MM-DD");
+      this.listQuery.eDate = this.daterange
+        ? moment(this.daterange[1]).format("YYYY-MM-DD")
+        : moment().format("YYYY-MM-DD");
       this.$store.dispatch("loadingHandler", true);
       this.getList();
     },

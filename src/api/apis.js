@@ -180,6 +180,12 @@ const api = {
     return req("post", "UserTopic/addData2Topic", data)
   },
 
+  // 帳號管理
+  /* 改密碼 */
+  updateUserPassword(data) {
+    return req("post", "User/updateUserPassword", data)
+  },
+
   // 上傳
   upload(data) {
     return req("post", "Upload", data);

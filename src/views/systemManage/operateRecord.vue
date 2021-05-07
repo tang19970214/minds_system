@@ -54,12 +54,14 @@ export default {
   data() {
     return {
       openSearchBox: true,
-      getDateRange: "",
+      getDateRange: [
+        moment().add(-7, "days").format("YYYY-MM-DD"),
+        moment().format("YYYY-MM-DD"),
+      ],
       tableData: [],
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        // StartDate: moment().format("YYYY-MM-DD"),
-        StartDate: "2021-03-01",
+        StartDate: moment().add(-7, "days").format("YYYY-MM-DD"),
         EndDate: moment().format("YYYY-MM-DD"),
         Page: 1,
         PageSize: 10,

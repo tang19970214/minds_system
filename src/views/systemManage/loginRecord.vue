@@ -59,12 +59,14 @@ export default {
   data() {
     return {
       openSearchBox: true,
-      getDateRange: "",
+      getDateRange: [
+        moment().add(-7, "days").format("YYYY-MM-DD"),
+        moment().format("YYYY-MM-DD"),
+      ],
       tableData: [],
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        // StartDate: moment().format("YYYY-MM-DD"),
-        StartDate: "2020-01-01",
+        StartDate: moment().add(-7, "days").format("YYYY-MM-DD"),
         EndDate: moment().format("YYYY-MM-DD"),
         Page: 1,
         PageSize: 10,
@@ -74,6 +76,8 @@ export default {
   },
   methods: {
     searchLog() {
+      console.log(this.getDateRange);
+      return;
       this.$store.dispatch("loadingHandler", true);
       this.listQuery.StartDate = this.getDateRange[0];
       this.listQuery.EndDate = this.getDateRange[1];
