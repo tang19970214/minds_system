@@ -37,48 +37,6 @@
       </div>
     </div>
 
-    <!-- <div class="projEdit__leftBox" :style="checkLeftBoxWidth.leftBox">
-      <transition name="moveL">
-        <div class="body" v-if="openLeftBox">
-          <div class="body__projSort">
-            <strong>專卷分類：</strong>
-            <div class="body__projSort--func">
-              <el-select v-model="searchSort" placeholder="請選擇" no-data-text="無數據" @change="getProjData">
-                <el-option label="請選擇" value=""></el-option>
-                <el-option :label="item.name" :value="item.name" v-for="item in projSortList" :key="item.id"></el-option>
-              </el-select>
-              <el-tooltip effect="dark" content="新增專卷分類" placement="bottom">
-                <i class="el-icon-plus" @click="openAddProjSort = true"></i>
-              </el-tooltip>
-            </div>
-          </div>
-
-          <div class="body__addTheme">
-            <span @click="checkSort()">
-              <i class="el-icon-circle-plus-outline"></i>
-              <a>新增主題</a>
-            </span>
-          </div>
-          <div class="body__projTheme">
-            <el-table :data="(getChild(projThemeList).length > 0) ? getChild(projThemeList)[0].children : []" align="center" style="width: 100%" border empty-text="暫無數據">
-              <el-table-column label="專卷主題">
-                <template slot-scope="scope">
-                  <el-button @click="chooseTheme(scope.row.name)" type="text" :disabled="(relationList.length > 0) ? relationList[relationList.length - 1].label == scope.row.name: false">
-                    <b :class="{'body__projTheme--active':getTheme.name == scope.row.name}">{{scope.row.name}}</b>
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </div>
-      </transition>
-
-      <div class="projEdit__leftBox--shrinkLeftBox" :style="checkLeftBoxWidth.shrink">
-        <i class="el-icon-caret-left" @click="openLeftBox = false" v-if="openLeftBox"></i>
-        <i class="el-icon-caret-right" @click="openLeftBox = true" v-else></i>
-      </div>
-    </div> -->
-
     <div class="projEdit__rightBox" :style="checkLeftBoxWidth.rightBox">
       <div class="projEdit__rightBox--infoBox">
         <el-row>
@@ -114,7 +72,7 @@
 
         <div class="relationFuncBtn">
           <el-button type="primary" @click="saveTopic()" :disabled="!getTheme">儲存</el-button>
-          <el-button type="danger" @click="getRelationList()">取消</el-button>
+          <el-button type="danger" @click="closeWindow()">關閉</el-button>
         </div>
       </div>
     </div>
@@ -125,6 +83,9 @@
       <el-form :model="addProjSort" :rules="rules_addProjSort" ref="ruleForm_addProjSort" label-width="110px">
         <el-form-item label="專卷分類" prop="name">
           <el-input v-model="addProjSort.name"></el-input>
+        </el-form-item>
+        <el-form-item label="備註">
+          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 5}" v-model="addProjSort.memo"></el-input>
         </el-form-item>
       </el-form>
 
@@ -180,6 +141,7 @@
       <div class="searchRelationModal__listBox">
         <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" border empty-text="暫無數據">
           <el-table-column type="selection" width="50"></el-table-column>
+          <el-table-column label="序號" type="index" width="50"></el-table-column>
           <el-table-column label="類型" prop="source" width="100"></el-table-column>
           <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
           <el-table-column label="新聞時間" width="150">
@@ -219,6 +181,11 @@ export default {
       projSortList: [],
       projThemeList: [],
       getTheme: "",
+      listQuery: {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        ids: JSON.parse(this.$route.query.chooseID),
+      },
+      listData: [],
       newsListQuery: {
         userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         sDate: "2021-01-01",
@@ -235,6 +202,7 @@ export default {
       openAddProjSort: false,
       addProjSort: {
         name: "",
+        memo: "",
       },
       rules_addProjSort: {
         name: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
@@ -259,7 +227,7 @@ export default {
       },
       tableData: [],
       listNum: null,
-      multipleSelection: [],
+      selectData: [],
 
       relationValue: [],
       copyRelationValue: [],
@@ -303,25 +271,16 @@ export default {
     },
     /* 獲取穿梭框資料 */
     getRelationList() {
-      let listIds = JSON.parse(this.$route.query.chooseID);
-      let chooseData = [];
-      let chooseIDX = [];
-      listIds.forEach((id) => {
-        let getItems = {};
-        let items = this.tableData.filter((res) => res.id == id)[0];
-        getItems = {
-          key: items.id,
-          label: items.newsTitle,
-          value: items.source,
+      this.relationList = this.listData.map((res) => {
+        return {
+          key: res.id,
+          label: res.newsTitle,
+          value: res.source,
           disabled: true,
         };
-        chooseData.push(getItems);
-        chooseIDX.push(id);
       });
-      this.relationList = chooseData;
-      this.relationValue = chooseIDX;
-      this.copyRelationValue = chooseIDX;
-      // console.log(this.relationList, this.relationValue);
+      this.relationValue = this.listData.map((res) => res.id);
+      this.copyRelationValue = this.relationValue;
     },
     /* 獲取所選專卷分類 */
     getProjData(val) {
@@ -347,6 +306,8 @@ export default {
     /* 選擇專卷主題並帶入現有分析內容 */
     async chooseTheme(val) {
       this.$store.dispatch("loadingHandler", true);
+      /* 將穿梭框重置 */
+      this.relationValue = this.copyRelationValue;
       /* 檢查是否已選擇主題 */
       const getNews = this.relationList.filter((resp) => resp.value !== "主題");
       this.getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
@@ -388,7 +349,7 @@ export default {
             UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
             Name: this.addProjSort.name,
             Action: "http://localhost/aaa",
-            Memo: "",
+            Memo: this.addProjSort.memo,
             SortOrder: 1,
             Pid: null,
             isShare: 0,
@@ -516,7 +477,7 @@ export default {
         this.copyRelationValue.includes(res.id)
       );
       getArr.forEach((item) => {
-        this.$refs.multipleTable.toggleRowSelection(item);
+        this.$refs.multipleTable.toggleRowSelection(item, true);
       });
       this.openSearchRelation = true;
     },
@@ -530,11 +491,42 @@ export default {
         this.searchList = res.data;
       });
     },
-    /* 獲取列表 */
-    async getNewsList() {
-      await this.$api.getNewsList(this.newsListQuery).then((res) => {
+    /* 獲取所選新聞 */
+    async getNewsListByIds() {
+      await this.$api.getNewsListByIds(this.listQuery).then((res) => {
+        this.listData = res.data.data;
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
+    /* 首次載入設置selectData */
+    setSelectData() {
+      // console.log(JSON.parse(this.$route.query.chooseID));
+      this.selectData = [
+        this.listData.filter((res) =>
+          JSON.parse(this.$route.query.chooseID).includes(res.id)
+        ),
+      ];
+      console.log(this.selectData);
+    },
+    /* 獲取新聞列表 */
+    getNewsList() {
+      this.$api.getNewsList(this.newsListQuery).then((res) => {
         this.tableData = res.data.data;
         this.listNum = res.data.count;
+        // 設置已勾選狀態
+        if (this.selectData[this.newsListQuery.page - 1] !== undefined) {
+          var selectUserList = this.selectData[this.newsListQuery.page - 1];
+          console.log(selectUserList);
+          this.$nextTick(() => {
+            this.tableData.forEach((item) => {
+              selectUserList.forEach((items) => {
+                if (item.id === items.id) {
+                  this.$refs.multipleTable.toggleRowSelection(item, true);
+                }
+              });
+            });
+          });
+        }
         this.$store.dispatch("loadingHandler", false);
       });
     },
@@ -542,6 +534,7 @@ export default {
     handleSizeChange(val) {
       this.$store.dispatch("loadingHandler", true);
       this.newsListQuery.pageSize = val;
+      this.selectData = [];
       this.getNewsList();
     },
     handleCurrentChange(val) {
@@ -551,7 +544,9 @@ export default {
     },
     /* 表格選擇 */
     handleSelectionChange(val) {
-      this.multipleSelection = val;
+      if (val.length !== 0) {
+        this.selectData[this.newsListQuery.page - 1] = val;
+      }
     },
     /* 搜尋鈕 */
     searchNewsList() {
@@ -568,11 +563,11 @@ export default {
     },
     /* 加入候選關聯新聞 */
     join() {
-      if (this.multipleSelection.length > 0) {
+      if (this.selectData.length > 0) {
         this.$store.dispatch("loadingHandler", true);
         let chooseData = [];
         let chooseIDX = [];
-        this.multipleSelection.forEach((res) => {
+        this.selectData.forEach((res) => {
           let getItems = {
             key: res.id,
             label: res.newsTitle,
@@ -600,12 +595,12 @@ export default {
       return;
 
       /* --------------------- */
-      if (this.multipleSelection.length > 0) {
+      if (this.selectData.length > 0) {
         this.$store.dispatch("loadingHandler", true);
         this.$router.push({
           name: "projEdit",
           query: {
-            chooseID: JSON.stringify(this.multipleSelection.map((i) => i.id)),
+            chooseID: JSON.stringify(this.selectData.map((i) => i.id)),
           },
         });
         this.getRelationList();
@@ -619,13 +614,31 @@ export default {
         });
       }
     },
+
+    /* 關閉視窗 */
+    closeWindow() {
+      this.$confirm("確定要關閉此頁面嗎？", "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          window.close();
+        })
+        .catch(() => {});
+    },
   },
   async mounted() {
     this.$store.dispatch("loadingHandler", true);
     this.openSearchRelation = false;
     this.getProjSortList();
     this.getSearchList();
-    await this.getNewsList();
+    /* 獲取所選新聞 */
+    await this.getNewsListByIds();
+    this.setSelectData();
+    /* 獲取新聞列表 */
+    this.getNewsList();
+    /* 設置穿梭框 */
     this.getRelationList();
   },
 };
@@ -738,76 +751,6 @@ export default {
     }
   }
 
-  // &__leftBox {
-  //   width: 250px;
-  //   height: 100%;
-  //   background: #191970;
-  //   display: flex;
-  //   align-items: flex-start;
-  //   border-right: 1px solid black;
-
-  //   .body {
-  //     width: 95%;
-  //     min-height: 100vh;
-  //     padding: 12px;
-  //     box-sizing: border-box;
-  //     border-right: 1px solid white;
-
-  //     &__projSort {
-  //       width: 100%;
-  //       display: flex;
-  //       align-items: flex-start;
-  //       flex-direction: column;
-  //       color: white;
-
-  //       &--func {
-  //         width: 100%;
-  //         padding: 16px 0;
-  //         display: flex;
-  //         align-items: center;
-  //         justify-content: space-between;
-  //       }
-
-  //       .el-select {
-  //         width: 150px !important;
-  //       }
-
-  //       i {
-  //         font-weight: bolder;
-  //         color: white;
-  //         font-size: 24px;
-  //         transition: 0.5s;
-  //         cursor: pointer;
-
-  //         &:hover {
-  //           transform: scale(1.2);
-  //         }
-  //       }
-  //     }
-
-  //     &__addTheme {
-  //       width: 100%;
-  //       display: flex;
-  //       align-items: center;
-  //       justify-content: flex-end;
-
-  //       span {
-  //         transition: 0.6s;
-  //         cursor: pointer;
-  //         i,
-  //         a {
-  //           padding: 0 2px;
-  //           font-size: 18px;
-  //           font-weight: bold;
-  //           color: white;
-  //         }
-
-  //         &:hover {
-  //           letter-spacing: 2px;
-  //         }
-  //       }
-  //     }
-
   &__projTheme {
     width: 100%;
     padding-top: 32px;
@@ -827,29 +770,6 @@ export default {
       color: #00abb9 !important;
     }
   }
-  //   }
-
-  //   &--shrinkLeftBox {
-  //     width: 5%;
-  //     min-height: 100vh;
-  //     color: white;
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: center;
-
-  //     i {
-  //       padding: 16px 0;
-  //       font-weight: bolder;
-  //       font-size: 20px;
-  //       transition: 0.4s;
-  //       cursor: pointer;
-
-  //       &:hover {
-  //         color: #00abb9;
-  //       }
-  //     }
-  //   }
-  // }
 
   &__rightBox {
     width: calc(100% - 250px);

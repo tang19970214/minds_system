@@ -28,8 +28,8 @@
       <div class="operateRecordPage__listBox--content">
         <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
           <el-table-column label="序號" type="index" width="50"></el-table-column>
-          <el-table-column label="單位" prop="actionType" width="100"></el-table-column>
-          <el-table-column label="使用者" prop="userId" width="150"></el-table-column>
+          <el-table-column label="操作類型" prop="actionType" width="100"></el-table-column>
+          <el-table-column label="使用者" prop="userName" width="150"></el-table-column>
           <el-table-column label="操作時間" width="180">
             <template slot-scope="scope">
               <div>{{ scope.row.createdTime | moment("YYYY-MM-DD HH:mm:ss") }}</div>
@@ -62,7 +62,7 @@ export default {
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         StartDate: moment().add(-7, "days").format("YYYY-MM-DD"),
-        EndDate: moment().format("YYYY-MM-DD"),
+        EndDate: moment().add(1,"days").format("YYYY-MM-DD"),
         Page: 1,
         PageSize: 10,
       },

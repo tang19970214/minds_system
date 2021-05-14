@@ -7,6 +7,12 @@
     <div class="instantAnalysis__card">
       <strong class="instantAnalysis__card--title">分析結果：</strong>
 
+      <div class="instantAnalysis__card--keyWord">
+        <strong>關鍵字：</strong>
+        <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
+        <a v-if="queries.length > 0" @click="queries = []">清空</a>
+      </div>
+
       <el-row>
         <el-col :span="14">
           <div class="instantAnalysis__card--result">
@@ -26,7 +32,7 @@
             </div>
 
             <div class="newsContent">
-              <text-highlight :class="ChangeHighlightBG(tagName)" :queries="queries">{{ getAnalysisContent }}</text-highlight>
+              <text-highlight :queries="queries">{{ getAnalysisContent }}</text-highlight>
             </div>
           </div>
         </el-col>
@@ -37,10 +43,8 @@
               <div class="detailPage__tagBox" v-for="item in tagGroup" :key="item.id">
                 <div class="detailPage__tagBox--header" :style="{background: getBG(item.id)}">
                   <strong>{{item.title}}</strong>
-                  <i class="el-icon-plus" v-if="!item.require" @click="collapseTag(item.id)"></i>
-                  <i class="el-icon-minus" v-else @click="collapseTag(item.id)"></i>
                 </div>
-                <div class="detailPage__tagBox--body" v-if="item.require">
+                <div class="detailPage__tagBox--body">
                   <div v-if="collapseList[item.value].length > 0">
                     <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
                       <strong v-if="item.value == 'Nation' || item.value == 'Place'">{{items.w}}</strong>
@@ -95,14 +99,12 @@ export default {
       },
       getAnalysisContent: "",
       tagGroup: [
-        { id: 0, title: "國家", value: "Nation", require: true },
-        { id: 1, title: "地點", value: "Place", require: false },
-        { id: 2, title: "人名", value: "TitlePeople", require: false },
-        { id: 3, title: "組織", value: "Org", require: false },
+        { id: 1, title: "國家", value: "Nation" },
+        { id: 2, title: "地點", value: "Place" },
+        { id: 3, title: "人名", value: "TitlePeople" },
+        { id: 4, title: "組織", value: "Org" },
       ],
-      tabIndex: 0,
       queries: [],
-      tagName: "",
 
       collapseList: null,
       enterAnalysis: false,
@@ -113,38 +115,20 @@ export default {
       return (id) => {
         let setBG = "";
         switch (id) {
-          case 0:
+          case 1:
             setBG = "#BBFFFF";
             break;
-          case 1:
+          case 2:
             setBG = "#BBFFBB";
             break;
-          case 2:
+          case 3:
             setBG = "#FFFFCE";
             break;
-          case 3:
+          case 4:
             setBG = "#FFD9EC";
             break;
         }
         return setBG;
-      };
-    },
-    ChangeHighlightBG() {
-      return (val) => {
-        switch (val) {
-          case "Nation":
-            return "nation";
-            break;
-          case "Place":
-            return "place";
-            break;
-          case "TitlePeople":
-            return "titlePeople";
-            break;
-          case "Org":
-            return "org";
-            break;
-        }
       };
     },
   },
@@ -182,14 +166,6 @@ export default {
           break;
       }
       this.queries = setKeyWord;
-      this.tagName = val;
-    },
-    /* tagGroup收合 */
-    collapseTag(id) {
-      this.tagGroup.map(
-        (item, index) =>
-          (item.require = index === id ? (item.require = !item.require) : false)
-      );
     },
   },
   mounted() {
@@ -236,10 +212,38 @@ export default {
       font-size: 26px;
     }
 
+    &--keyWord {
+      width: 100%;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+
+      p {
+        margin: 0;
+        padding-right: 8px;
+
+        // &::after {
+        //   content: "、";
+        // }
+
+        // &:last-child {
+        //   background: crimson;
+        // }
+      }
+
+      a {
+        font-size: 10px;
+        color: cornflowerblue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    }
+
     &--result {
       position: relative;
       width: 100%;
       height: calc(100vh - 100px);
+      // min-height: 500px;
       border: 1px solid #2d2d2d;
       margin-top: 20px;
 
@@ -283,19 +287,6 @@ export default {
         box-sizing: border-box;
         overflow-wrap: break-word;
         line-height: 1.5rem;
-
-        .nation > mark {
-          background: rgb(187, 255, 255) !important;
-        }
-        .place > mark {
-          background: rgb(187, 255, 187) !important;
-        }
-        .titlePeople > mark {
-          background: rgb(255, 255, 206) !important;
-        }
-        .org > mark {
-          background: rgb(255, 217, 236) !important;
-        }
       }
     }
 
@@ -328,18 +319,11 @@ export default {
             border-bottom: 1px solid #eee;
             display: flex;
             align-items: center;
-            justify-content: space-between;
             color: #191970;
 
             i {
               font-weight: bold;
               color: #191970;
-              transition: 0.4s;
-              cursor: pointer;
-
-              &:hover {
-                transform: scale(1.3);
-              }
             }
           }
 

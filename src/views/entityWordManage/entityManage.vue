@@ -8,8 +8,8 @@
       <div class="entityManagePage__searchBox" v-if="openSearchBox">
         <div class="entityManagePage__searchBox--sort">
           <label>實體分類：</label>
-          <el-select v-model="entitySort" placeholder="請選擇實體分類" no-data-text="無數據">
-            <el-option label="請選擇" value=""></el-option>
+          <el-select v-model="listQuery.catId" placeholder="請選擇實體分類" no-data-text="無數據" @change="filterCatId">
+            <el-option label="全部" value=""></el-option>
             <el-option :label="item.name" :value="item.id" v-for="item in entitySortData" :key="item.id"></el-option>
           </el-select>
           <i class="el-icon-edit" @click="openEntityModal('edit')"></i>
@@ -21,7 +21,7 @@
 
     <div class="entityManagePage__listBox">
       <div class="entityManagePage__listBox--addEntity">
-        <span @click="entityModal = true">
+        <span @click="entityFunc('add')">
           <i class="el-icon-circle-plus-outline"></i>
           <a>新增實體</a>
         </span>
@@ -50,7 +50,7 @@
         <el-table-column fixed="right" label="操作" width="200">
           <template slot-scope="scope">
             <div class="entityManagePage__listBox--userFunc">
-              <el-tooltip effect="dark" content="啟動" placement="bottom">
+              <!-- <el-tooltip effect="dark" content="啟動" placement="bottom">
                 <el-button type="text" :disabled="scope.row.enable == 1" @click="entityFunc('play', scope.row)">
                   <font-awesome-icon icon="play-circle" />
                 </el-button>
@@ -59,8 +59,12 @@
                 <el-button type="text" :disabled="scope.row.enable == 0" @click="entityFunc('stop', scope.row)">
                   <font-awesome-icon icon="stop-circle" />
                 </el-button>
+              </el-tooltip> -->
+              <el-tooltip effect="dark" content="編輯" placement="bottom">
+                <el-button type="text" @click="entityFunc('edit', scope.row)">
+                  <i class="el-icon-edit"></i>
+                </el-button>
               </el-tooltip>
-
               <el-tooltip effect="dark" content="刪除" placement="bottom">
                 <el-button type="text" @click="entityFunc('del', scope.row)">
                   <i class="el-icon-delete"></i>
@@ -92,35 +96,30 @@
     </el-dialog>
 
     <!-- 新增實體 -->
-    <el-dialog title="新增實體" :visible.sync="entityModal" width="50%" center>
+    <el-dialog :title="custDefsTitle+'實體'" :visible.sync="entityModal" width="50%" center>
       <el-form :model="entityList" :rules="entityRules" ref="ruleForm_entityModal" label-width="120px">
         <!-- 實體分類 -->
-        <el-form-item label="實體分類" prop="CatId">
-          <el-select v-model="entityList.CatId" placeholder="請選擇實體分類">
+        <el-form-item label="實體分類" prop="catId">
+          <el-select v-model="entityList.catId" placeholder="請選擇實體分類">
             <el-option label="請選擇" value=""></el-option>
             <el-option :label="item.name" :value="item.id" v-for="item in entitySortData" :key="item.id"></el-option>
           </el-select>
         </el-form-item>
         <!-- 實體名稱 -->
-        <el-form-item label="實體名稱" prop="CustPosName">
-          <el-input v-model="entityList.CustPosName"></el-input>
+        <el-form-item label="實體名稱" prop="custPosName">
+          <el-input v-model="entityList.custPosName"></el-input>
         </el-form-item>
         <!-- 設定方式 -->
         <div class="entityManagePage__entityModal">
           <label>設定方式</label>
           <div class="entityManagePage__entityModal--tab">
-            <el-tabs class="w-full" type="border-card">
+            <el-tabs class="w-full" type="border-card" v-model="getTabName">
               <!-- 上傳檔案 -->
               <el-tab-pane label="上傳檔案">
                 <div class="uploadFiles">
-                  <!-- <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
-                    <el-button size="small" type="primary">上傳</el-button>
-                  </el-upload> -->
-
-                  <el-upload ref="imageUpload" class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" accept=".png,.jpg,.jpeg,.svg,.pdf" :http-request="customUpload" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" :limit="1" :on-exceed="handleExceed" :file-list="fileList">
+                  <el-upload ref="imageUpload" class="upload-demo" action="" accept=".png,.jpg,.jpeg,.svg,.pdf" :http-request="customUpload" :on-remove="handleRemove" :before-remove="beforeRemove" :limit="1" :on-exceed="handleExceed" :file-list="fileList">
                     <el-button size="small" type="primary">上傳</el-button>
                   </el-upload>
-
                 </div>
               </el-tab-pane>
               <!-- 自訂正則表達式 -->
@@ -140,7 +139,11 @@
 
                   <el-row class="regularExpress__content">
                     <el-col :span="18">
-                      <div class="regularExpress__content--param">{{entityList.Param}}</div>
+                      <div class="regularExpress__content--param">
+                        <el-checkbox-group v-model="checkedParam">
+                          <el-checkbox v-for="(item, idx) in paramGroup" :label="item" :key="idx">{{item}}</el-checkbox>
+                        </el-checkbox-group>
+                      </div>
                       <!-- <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 6}" v-model="entityList.Param"></el-input> -->
                     </el-col>
                     <el-col :span="6">
@@ -153,19 +156,20 @@
           </div>
         </div>
         <!-- 啟動 -->
-        <el-form-item label="啟動" prop="CustPosName">
-          <el-radio v-model="entityList.Enable" :label="1">是</el-radio>
-          <el-radio v-model="entityList.Enable" :label="0">否</el-radio>
+        <el-form-item label="啟動">
+          <el-radio v-model="entityList.enable" :label="1">是</el-radio>
+          <el-radio v-model="entityList.enable" :label="0">否</el-radio>
         </el-form-item>
         <!-- 備註 -->
-        <el-form-item label="備註" prop="Memo">
-          <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 6}" v-model="entityList.Memo">
+        <el-form-item label="備註">
+          <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 6}" v-model="entityList.memo">
           </el-input>
         </el-form-item>
       </el-form>
 
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="addCustDefs()">儲存</el-button>
+        <el-button type="primary" @click="addCustDefs()" v-if="custDefsTitle == '新增'">儲存</el-button>
+        <el-button type="primary" @click="updateCustDefs()" v-else>儲存</el-button>
         <el-button type="danger" @click="entityModal = false">取消</el-button>
       </span>
     </el-dialog>
@@ -181,10 +185,12 @@ export default {
     return {
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        catId: "",
       },
       openSearchBox: true,
+      getTabName: "0",
+
       /* 實體分類 */
-      entitySort: "",
       entitySortData: [],
       entitySortModal: false,
       entitySortModalTitle: "",
@@ -201,18 +207,26 @@ export default {
       /* 實體 */
       tableData: [],
       entityModal: false,
+      custDefsTitle: "",
       entityList: {
-        CatId: "",
-        CustPosName: "",
-        Enable: 1,
-        Memo: "",
-        CreatedUser: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        FileName: "",
+        catId: "",
+        custPosName: "",
+        enable: 1,
+        memo: "",
+        createdUser: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        fileName: "",
         Param: "",
       },
-      entityRules: {},
+      entityRules: {
+        catId: [{ required: true, message: "此為必填欄位", trigger: "change" }],
+        custPosName: [
+          { required: true, message: "此為必填欄位", trigger: "blur" },
+        ],
+      },
       fileList: [],
       regularText: "",
+      checkedParam: [],
+      paramGroup: [],
     };
   },
   methods: {
@@ -231,15 +245,19 @@ export default {
         this.$store.dispatch("loadingHandler", false);
       });
     },
+    filterCatId(val) {
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    },
     openEntityModal(val) {
       switch (val) {
         case "edit":
-          if (!!this.entitySort) {
+          if (!!this.listQuery.catId) {
             this.entitySortModalTitle = "編輯";
             this.entitySortModal = true;
 
             const getEntity = this.entitySortData.filter(
-              (res) => res.id == this.entitySort
+              (res) => res.id == this.listQuery.catId
             )[0];
             this.entitySortList.Name = getEntity?.name;
             this.entitySortList.Memo = getEntity?.memo;
@@ -258,7 +276,7 @@ export default {
           this.entitySortModal = true;
           break;
         case "del":
-          if (!!this.entitySort) {
+          if (!!this.listQuery.catId) {
             this.$confirm("確定要刪除嗎？", "提示", {
               confirmButtonText: "確定",
               cancelButtonText: "取消",
@@ -302,7 +320,7 @@ export default {
         if (valid) {
           this.$store.dispatch("loadingHandler", true);
           const getEntity = this.entitySortData.filter(
-            (res) => res.id == this.entitySort
+            (res) => res.id == this.listQuery.catId
           )[0];
           const editData = {
             UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
@@ -328,7 +346,7 @@ export default {
       this.$store.dispatch("loadingHandler", true);
       const delInfo = {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        Id: this.entitySort,
+        Id: this.listQuery.catId,
       };
       this.$api.deleteCat(delInfo).then((res) => {
         this.$notify({
@@ -337,34 +355,60 @@ export default {
           type: "success",
         });
         this.getEntity();
-        this.entitySort = "";
+        this.listQuery.catId = "";
         this.$store.dispatch("loadingHandler", false);
       });
     },
 
     entityFunc(val, item) {
       switch (val) {
-        case "play":
-          this.$confirm("確定要啟動此實體嗎？", "提示", {
-            confirmButtonText: "確定",
-            cancelButtonText: "取消",
-            type: "warning",
-          })
-            .then(() => {
-              this.updateCustDefs(item, 1);
-            })
-            .catch(() => {});
+        // case "play":
+        //   this.$confirm("確定要啟動此實體嗎？", "提示", {
+        //     confirmButtonText: "確定",
+        //     cancelButtonText: "取消",
+        //     type: "warning",
+        //   })
+        //     .then(() => {
+        //       this.updateCustDefs(item, 1);
+        //     })
+        //     .catch(() => {});
+        //   break;
+        // case "stop":
+        //   this.$confirm("確定要停止此實體嗎？", "提示", {
+        //     confirmButtonText: "確定",
+        //     cancelButtonText: "取消",
+        //     type: "warning",
+        //   })
+        //     .then(() => {
+        //       this.updateCustDefs(item, 0);
+        //     })
+        //     .catch(() => {});
+        //   break;
+        case "add":
+          this.entityList = {
+            catId: "",
+            custPosName: "",
+            enable: 1,
+            memo: "",
+            createdUser: JSON.parse(window.localStorage.getItem("userInfo"))
+              .userId,
+            fileName: "",
+            Param: "",
+          };
+          this.paramGroup = [];
+          this.getTabName = "0";
+          this.custDefsTitle = "新增";
+          this.entityModal = true;
           break;
-        case "stop":
-          this.$confirm("確定要停止此實體嗎？", "提示", {
-            confirmButtonText: "確定",
-            cancelButtonText: "取消",
-            type: "warning",
-          })
-            .then(() => {
-              this.updateCustDefs(item, 0);
-            })
-            .catch(() => {});
+        case "edit":
+          console.log(item);
+          if (!!item.param) {
+            this.getTabName = "1";
+            this.paramGroup = JSON.parse(item.param);
+          }
+          this.custDefsTitle = "編輯";
+          this.entityModal = true;
+          this.entityList = item;
           break;
         case "del":
           this.$confirm("確定要刪除此實體嗎？", "提示", {
@@ -379,30 +423,100 @@ export default {
           break;
       }
     },
-    addCustDefs() {},
-    updateCustDefs(item, status) {
-      item.enable = status;
-      this.$api.updateCustDefs(item).then((res) => {
+    addCustDefs() {
+      if (this.getTabName == 0) {
+        /* 上傳檔案 */
+        this.entityList.Param = "";
+      } else {
+        /* 自訂正則表達式 */
+        this.entityList.fileName = "";
+        this.entityList.Param = JSON.stringify(this.paramGroup);
+      }
+      this.$refs.ruleForm_entityModal.validate((valid) => {
+        if (valid) {
+          this.$store.dispatch("loadingHandler", true);
+          this.$api.addCustDefs(this.entityList).then((res) => {
+            if (res.data) {
+              this.$notify({
+                title: "成功",
+                message: "新增成功！",
+                type: "success",
+              });
+            } else {
+              this.$notify({
+                title: "錯誤",
+                message: "未知的錯誤！",
+                type: "error",
+              });
+            }
+            this.entityList = {
+              custPosName: "",
+              enable: 1,
+              memo: "",
+              fileName: "",
+              Param: "",
+            };
+            this.paramGroup = "";
+            this.entityModal = false;
+            this.getList();
+          });
+        }
+      });
+    },
+    updateCustDefs() {
+      this.$store.dispatch("loadingHandler", true);
+      if (this.getTabName == 0) {
+        /* 上傳檔案 */
+        this.entityList.Param = "";
+      } else {
+        /* 自訂正則表達式 */
+        this.entityList.fileName = "";
+        this.entityList.Param = JSON.stringify(this.paramGroup);
+      }
+      this.$api.updateCustDefs(this.entityList).then((res) => {
         this.$notify({
           title: "成功",
           message: "修改成功！",
           type: "success",
         });
+        this.entityModal = false;
         this.getList();
+        this.$store.dispatch("loadingHandler", false);
       });
     },
     delCustDefs(id) {
-      console.log(id);
+      this.$store.dispatch("loadingHandler", true);
+      const delQuery = {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        Id: id,
+      };
+      this.$api.deleteCustDefs(delQuery).then((res) => {
+        if (res.data) {
+          this.$notify({
+            title: "成功",
+            message: "新增成功！",
+            type: "success",
+          });
+        } else {
+          this.$notify({
+            title: "錯誤",
+            message: "未知的錯誤！",
+            type: "error",
+          });
+        }
+        this.getList();
+      });
     },
 
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
+    handleRemove() {
+      this.fileList = [];
     },
-    handlePreview(file) {
-      console.log(file);
-    },
-    handleExceed(files, fileList) {
-      this.$message.warning("最多只能上傳3個檔案！");
+    handleExceed() {
+      this.$notify({
+        title: "警告",
+        message: "最多只能上傳1個檔案！",
+        type: "warning",
+      });
     },
     beforeRemove(file, fileList) {
       return this.$confirm(`確定要移除 ${file.name}？`, "提示", {
@@ -423,6 +537,7 @@ export default {
             url: "http://msapi.autoware.com.tw/" + res.data.dbPath,
           };
           this.fileList.push(fileInfo);
+          this.entityList.fileName = this.fileList[0].url;
         })
         .catch((error) => {
           console.log(error);
@@ -430,18 +545,9 @@ export default {
     },
     addRegular() {
       if (!!this.regularText) {
-        const regularArr = [];
-        if (!this.entityList.Param) {
-          regularArr.push(JSON.stringify(this.regularText));
-          this.entityList.Param = regularArr[0];
-          console.log(regularArr);
-          this.regularText = "";
-        } else {
-          let newStr =
-            this.entityList.Param + "、" + JSON.stringify(this.regularText);
-          this.entityList.Param = newStr;
-          this.regularText = "";
-        }
+        const regularArr = [this.regularText];
+        this.paramGroup.push(this.regularText);
+        this.regularText = "";
       } else {
         this.$notify({
           title: "警告",
@@ -451,7 +557,10 @@ export default {
       }
     },
     removeRegular() {
-      console.log(this.entityList.Param);
+      let newArr = this.paramGroup.filter(
+        (res) => !this.checkedParam.includes(res)
+      );
+      this.paramGroup = newArr;
     },
   },
   mounted() {
@@ -635,11 +744,24 @@ export default {
 
           &--param {
             width: 100%;
-            min-height: 126px;
+            min-height: 150px;
+            max-height: 150px;
             padding: 16px;
             box-sizing: border-box;
             border: 1px solid #dcdfe6;
             border-radius: 4px;
+            overflow-y: auto;
+
+            .el-checkbox {
+              min-width: 100%;
+              max-width: 100%;
+              margin: 0;
+              text-align: left;
+              &__label {
+                color: #191970;
+                font-size: 16px;
+              }
+            }
           }
         }
       }

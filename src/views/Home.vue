@@ -25,7 +25,7 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" :cell-style="{padding: '3px', height: '20px'}" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="selection" width="50"></el-table-column>
         <el-table-column label="序號" type="index" width="50"></el-table-column>
         <el-table-column label="類型" prop="source" width="100"></el-table-column>
@@ -37,7 +37,7 @@
         <el-table-column label="新聞時間" width="150">
           <template slot-scope="scope">
             <div>{{ scope.row.newsTime | moment("YYYY-MM-DD") }}</div>
-            <div>{{ scope.row.newsTime | moment("HH:mm") }}</div>
+            <!--<div>{{ scope.row.newsTime | moment("HH:mm") }}</div>-->
           </template>
         </el-table-column>
         <el-table-column label="新聞網站" prop="newsSite" width="100"></el-table-column>
@@ -64,6 +64,7 @@ export default {
     return {
       dayAddNum: "",
       listQuery: {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         sDate: "2020-01-01",
         eDate: "2021-12-31",
         query: "",
@@ -78,7 +79,8 @@ export default {
         eDate: "2021-12-31",
       },
       tableData: [],
-      multipleSelection: [],
+      selectData: [],
+      selectionIds: [],
       sampleData: [],
     };
   },
@@ -87,6 +89,29 @@ export default {
       this.$api.getNewsList(this.listQuery).then((res) => {
         this.tableData = res.data.data;
         this.listNum = res.data.count;
+        // 設置已勾選狀態
+        if (this.selectData[this.listQuery.page - 1] !== undefined) {
+          var selectUserList = this.selectData[this.listQuery.page - 1];
+          this.$nextTick(() => {
+            this.tableData.forEach((item) => {
+              selectUserList.forEach((items) => {
+                if (item.id === items.id) {
+                  this.$refs.multipleTable.toggleRowSelection(item, true);
+                }
+              });
+            });
+          });
+        }
+        // let restoreData = this.tableData
+        //   .map((item, index) => {
+        //     return this.selectionIds.includes(item.id) ? index : false;
+        //   })
+        //   .filter((item) => item !== false);
+        // restoreData.forEach((item) => {
+        //   console.log("我有設定", this.tableData[item]);
+        //   this.$refs.multipleTable.toggleRowSelection(this.tableData[item]);
+        // });
+
         this.$store.dispatch("loadingHandler", false);
       });
     },
@@ -100,23 +125,34 @@ export default {
       this.listQuery.nSite = "全部";
       this.getList();
     },
-    /* 表格所選列 */
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach((row) => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
-      }
-    },
     handleSelectionChange(val) {
-      this.multipleSelection = val;
+      if (val.length !== 0) {
+        this.selectData[this.listQuery.page - 1] = val;
+      }
+      // let reSetelet = [];
+      // if (val.length > 0) {
+      //   let valIds = val.map((item) => item.id);
+      //   let thisTimeSelect = valIds[valIds.length - 1];
+      //   if (this.selectionIds.includes(thisTimeSelect)) {
+      //     reSetelet = this.selectionIds.filter((id) => id !== thisTimeSelect);
+      //   } else {
+      //     reSetelet = [...this.selectionIds, thisTimeSelect];
+      //   }
+      //   console.log(reSetelet);
+      //   this.selectionIds = reSetelet;
+      // }
+      // let restoreData = this.tableData
+      //   .map((item, index) => {
+      //     return reSetelet.includes(item.id) ? item : false;
+      //   })
+      //   .filter((item) => item !== false);
+      // this.multipleSelection = restoreData;
     },
     /* 換頁鈕 */
     handleSizeChange(val) {
       this.$store.dispatch("loadingHandler", true);
       this.listQuery.pageSize = val;
+      this.selectData = [];
       this.getList();
     },
     handleCurrentChange(val) {
@@ -124,15 +160,20 @@ export default {
       this.listQuery.page = val;
       this.getList();
     },
+    /* 加入專卷分析 */
     goProjEdit() {
-      if (this.multipleSelection.length > 0) {
+      if (this.selectData.length > 0) {
         const dataID = [];
-        this.multipleSelection.forEach((element) => {
-          dataID.push(element.id);
+        this.selectData.forEach((res) => {
+          res.forEach((resp) => {
+            dataID.push(resp.id);
+          });
         });
         let routeUrl = this.$router.resolve({
           name: "projEdit",
-          query: { chooseID: JSON.stringify(dataID) },
+          query: {
+            chooseID: JSON.stringify(dataID),
+          },
         });
         window.open(routeUrl.href, "_blank");
       } else {
@@ -255,6 +296,18 @@ export default {
     await this.getStatics();
     this.draw();
   },
+  // updated() {
+  //   console.log(this.selectionIds);
+  //   this.$refs.multipleTable.clearSelection();
+  //   let restoreData = this.tableData
+  //     .map((item, index) => {
+  //       return this.selectionIds.includes(item.id) ? index : false;
+  //     })
+  //     .filter((item) => item !== false);
+  //   restoreData.forEach((item) => {
+  //     this.$refs.multipleTable.toggleRowSelection(this.tableData[item], true);
+  //   });
+  // },
 };
 </script>
 

@@ -28,7 +28,7 @@ const api = {
   },
 
   // 首頁
-  /* 獲取首頁資料 */
+  /* 獲取新聞資料 */
   getNewsList(data) {
     return req("post", "NewsData/getNewsList", data);
   },
@@ -39,6 +39,10 @@ const api = {
   /* 獲取新聞詳情 */
   getNewsDetail(data) {
     return req("post", "NewsData/getNewsDetail", data);
+  },
+  /* 以ID搜出新聞 */
+  getNewsListByIds(data) {
+    return req("post", "NewsData/getNewsListByIds", data);
   },
 
   // 專卷管理

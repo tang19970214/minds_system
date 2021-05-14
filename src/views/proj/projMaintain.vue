@@ -52,14 +52,26 @@
       </el-row>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50">
-        </el-table-column>
-        <el-table-column label="序號" type="index" width="50">
-        </el-table-column>
-        <el-table-column label="新聞標題" prop="newsTitle">
+        <el-table-column type="selection" width="50"></el-table-column>
+        <el-table-column label="序號" type="index" width="50"></el-table-column>
+        <el-table-column label="新聞標題">
+          <template slot-scope="scope">
+            <a class="projMaintain__listBox--goDetailPage" @click="goDetailPage(scope.row)">{{ scope.row.newsTitle }}</a>
+          </template>
         </el-table-column>
         <el-table-column label="建立時間" width="200">
           <template slot-scope="scope">{{ scope.row.createdTime | moment("YYYY-MM-DD HH:mm") }}</template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="200">
+          <template slot-scope="scope">
+            <div class="projMaintain__listBox--userFunc">
+              <el-tooltip effect="dark" content="刪除" placement="bottom">
+                <el-button type="text" @click="delProjMaintainList(scope.row)">
+                  <i class="el-icon-delete"></i>
+                </el-button>
+              </el-tooltip>
+            </div>
+          </template>
         </el-table-column>
       </el-table>
     </div>
@@ -196,6 +208,14 @@ export default {
         this.tableData = res.data;
         this.$store.dispatch("loadingHandler", false);
       });
+    },
+    /* 前往新聞詳細頁 */
+    goDetailPage(data) {
+      let routeUrl = this.$router.resolve({
+        name: "infoDetail",
+        params: { id: data.newsId },
+      });
+      window.open(routeUrl.href, "_blank");
     },
 
     /* ============================================ */
@@ -534,6 +554,36 @@ export default {
       }
     },
 
+    /* 刪除所選列表 */
+    delProjMaintainList(item) {
+      this.$confirm("確定要刪除嗎?", "提示", {
+        confirmButtonText: "確定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          this.$store.dispatch("loadingHandler", true);
+          const listQuery = {
+            UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+            ids: [item.id],
+          };
+          this.$api.deleteUserTopic(listQuery).then((res) => {
+            if (res.data) {
+              this.$message({
+                type: "success",
+                message: "删除成功!",
+              });
+              this.getList(this.projThemeInfo.id);
+            } else {
+              this.$message({
+                type: "error",
+                message: "未知的錯誤!",
+              });
+            }
+          });
+        })
+        .catch(() => {});
+    },
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -663,6 +713,25 @@ export default {
 
         &:hover {
           letter-spacing: 2px;
+        }
+      }
+    }
+
+    &--goDetailPage {
+      color: #0645ad;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    &--userFunc {
+      span {
+        font-size: 20px;
+        color: #191970;
+        i {
+          transition: 0.3s;
+          &:hover {
+            transform: scale(1.2);
+          }
         }
       }
     }

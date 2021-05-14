@@ -1,88 +1,115 @@
 <template>
-  <div class="keywordAnalysis">
-    <div class="keywordAnalysis__setting" @click="openSearchBox = !openSearchBox">
+  <div class="wordManage">
+    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
       <strong>查詢設定</strong>
     </div>
 
     <transition name="moveR">
-      <div class="keywordAnalysis__searchBox" v-if="openSearchBox">
-        <div class="keywordAnalysis__searchBox--dateRange">
+      <div class="wordManage__searchBox" v-if="openSearchBox">
+        <div class="wordManage__searchBox--dateRange">
           <div class="sDate">
             <div class="sDate__title">
-              <label>分析來源：</label>
+              <label>開始日期：</label>
             </div>
-            <el-select v-model="listQuery.TermTypeId" placeholder="請選擇詞庫類別" no-data-text="無數據">
-              <el-option label="請選擇" :value="0"></el-option>
-              <el-option label="新聞" value="新聞"></el-option>
-            </el-select>
+            <el-date-picker v-model="listQuery.sDate" type="date" placeholder="請選擇開始日期" format="yyyy-MM-dd">
+            </el-date-picker>
           </div>
           <div class="eDate">
             <div class="eDate__title">
-              <label>關鍵字搜尋：</label>
+              <label>結束日期：</label>
             </div>
-            <el-input v-model="listQuery.Query"> </el-input>
-          </div>
-        </div>
-
-        <div class="keywordAnalysis__searchBox--kindAndSort">
-          <div class="kind">
-            <div class="kind__title">
-              <label>分析日期：</label>
-            </div>
-            <el-date-picker v-model="daterange" type="daterange" range-separator="至" start-placeholder="開始日期" end-placeholder="結束日期">
+            <el-date-picker v-model="listQuery.eDate" type="date" placeholder="請選擇開始日期">
             </el-date-picker>
           </div>
+        </div>
 
-          <div class="func">
-            <el-button type="primary" @click="searchWord()">分析</el-button>
+        <div class="wordManage__searchBox--kindAndSort">
+          <div class="kind">
+            <div class="kind__title">
+              <label>維護詞庫類別：</label>
+            </div>
+            <el-select v-model="listQuery.TermTypeId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
+              <el-option label="請選擇" :value="0"></el-option>
+              <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
+            </el-select>
+          </div>
+
+          <div class="sort">
+            <div class="sort__title">
+              <label>實體詞分類：</label>
+            </div>
+            <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇" no-data-text="無數據" :disabled="listQuery.TermTypeId !== 3">
+              <el-option label="請選擇" :value="0"></el-option>
+              <el-option v-for="item in entityList" :key="item.id" :label="item.entityName" :value="item.entityId"></el-option>
+            </el-select>
           </div>
         </div>
 
+        <div class="wordManage__searchBox--searchStr">
+          <div class="keyword">
+            <label>關鍵字：</label>
+            <el-input v-model="listQuery.Query"></el-input>
+          </div>
+          <el-button type="primary" @click="searchWord()">查詢</el-button>
+        </div>
       </div>
     </transition>
 
-    <div class="keywordAnalysis__listBox">
-      <div class="keywordAnalysis__listBox--add">
-        <span v-if="multipleSelection.length == 0" @click="cannotCSV()">
-          <i class="el-icon-s-data"></i>
-          <a>匯出</a>
-        </span>
-        <span v-else>
-          <download-csv :data="multipleSelection" :name="'關鍵字分析.csv'">
-            <i class="el-icon-s-data"></i>
-            <a>匯出</a>
-          </download-csv>
+    <div class="wordManage__listBox">
+      <div class="wordManage__listBox--add">
+        <span @click="openAddWordManage = true">
+          <i class="el-icon-plus"></i>
+          <a>新增</a>
         </span>
       </div>
 
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50"></el-table-column>
+        <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column type="index" label="序號" width="60"></el-table-column>
-        <el-table-column label="關鍵字" prop="term"></el-table-column>
-        <el-table-column label="詞頻" prop="termTypeId"></el-table-column>
-        <el-table-column label="關聯關鍵字" prop="memo"></el-table-column>
+        <el-table-column label="實體詞分類">
+          {{getEntity(listQuery.EntityTypeId)}}
+        </el-table-column>
+        <el-table-column label="實體詞名稱" prop="term"></el-table-column>
+        <el-table-column label="備註" prop="memo"></el-table-column>
+        <el-table-column fixed="right" label="操作" width="200">
+          <template slot-scope="scope">
+            <div>
+              <el-tooltip effect="dark" content="編輯" placement="bottom">
+                <el-button type="text" @click="editWordManage(scope.row)">
+                  <i class="el-icon-edit"></i>
+                </el-button>
+              </el-tooltip>
+
+              <el-tooltip effect="dark" content="刪除" placement="bottom">
+                <el-button type="text" @click="delWordManage(scope.row)">
+                  <i class="el-icon-delete"></i>
+                </el-button>
+              </el-tooltip>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
 
     <!-- modal -->
-    <!-- <el-dialog class="addkeywordAnalysisModal" title="新增實體詞" :visible.sync="openAddkeywordAnalysis" width="50%" center>
-      <el-form :model="addkeywordAnalysis" :rules="rules_openAddkeywordAnalysis" ref="ruleForm_openAddkeywordAnalysis" label-width="130px">
+    <el-dialog class="addWordManageModal" title="新增實體詞" :visible.sync="openAddWordManage" width="50%" center>
+      <el-form :model="addWordManage" :rules="rules_openAddWordManage" ref="ruleForm_openAddWordManage" label-width="130px">
         <el-form-item label="詞庫類別">
           <strong>實體詞</strong>
         </el-form-item>
         <el-form-item label="實體詞分類" prop="Term">
-          <el-input v-model="addkeywordAnalysis.Term"></el-input>
+          <el-input v-model="addWordManage.Term"></el-input>
         </el-form-item>
         <el-form-item label="備註" prop="memo">
-          <el-input type="textarea" v-model="addkeywordAnalysis.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
+          <el-input type="textarea" v-model="addWordManage.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
         </el-form-item>
       </el-form>
 
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="addEntity()">新增</el-button>
-        <el-button type="danger" @click="openAddkeywordAnalysis = false">取消</el-button>
+        <el-button type="danger" @click="openAddWordManage = false">取消</el-button>
       </span>
-    </el-dialog> -->
+    </el-dialog>
 
   </div>
 </template>
@@ -102,28 +129,28 @@ export default {
         EntityTypeId: 0, // 選擇實體詞分類
         sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
         eDate: moment().format("YYYY-MM-DD"),
-        Page: 1,
-        PageSize: 10,
       },
-      daterange: null,
+      wordClassList: [],
       entityList: [],
+
       tableData: [],
       multipleSelection: [],
-      // openAddkeywordAnalysis: false,
-      // addkeywordAnalysis: {
-      //   UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-      //   OrgId: 1,
-      //   Term: "",
-      //   POS: 128,
-      //   Freq: 20000,
-      //   TermTypeId: 3,
-      //   EntityTypeId: "",
-      //   memo: "",
-      // },
-      // rules_openAddkeywordAnalysis: {
-      //   Term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
-      //   memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
-      // },
+
+      openAddWordManage: false,
+      addWordManage: {
+        UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        OrgId: 1,
+        Term: "",
+        POS: 128,
+        Freq: 20000,
+        TermTypeId: 3,
+        EntityTypeId: "",
+        memo: "",
+      },
+      rules_openAddWordManage: {
+        Term: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+        memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
+      },
     };
   },
   computed: {
@@ -135,6 +162,15 @@ export default {
     },
   },
   methods: {
+    getKeyClass() {
+      this.$api
+        .getTermTypeList({
+          UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        })
+        .then((res) => {
+          this.wordClassList = res.data;
+        });
+    },
     getEntityTypeList() {
       this.$api
         .getEntityTypeList({
@@ -144,6 +180,14 @@ export default {
           this.entityList = res.data;
         });
     },
+    /* 取得所選詞庫類別 */
+    getWordClass(val) {
+      if (val == 3) {
+        this.getEntityTypeList();
+      } else {
+        this.listQuery.EntityTypeId = 0;
+      }
+    },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
         console.log(res);
@@ -152,20 +196,16 @@ export default {
       });
     },
     searchWord() {
-      this.listQuery.sDate = this.daterange
-        ? moment(this.daterange[0]).format("YYYY-MM-DD")
-        : moment().format("YYYY-MM-DD");
-      this.listQuery.eDate = this.daterange
-        ? moment(this.daterange[1]).format("YYYY-MM-DD")
-        : moment().format("YYYY-MM-DD");
+      this.listQuery.sDate = moment(this.listQuery.sDate).format("YYYY-MM-DD");
+      this.listQuery.eDate = moment(this.listQuery.eDate).format("YYYY-MM-DD");
       this.$store.dispatch("loadingHandler", true);
       this.getList();
     },
-    // addEntity() {
-    //   console.log(this.addkeywordAnalysis);
-    // },
-    editkeywordAnalysis(data) {},
-    delkeywordAnalysis(data) {},
+    addEntity() {
+      console.log(this.addWordManage);
+    },
+    editWordManage(data) {},
+    delWordManage(data) {},
     toggleSelection(rows) {
       if (rows) {
         rows.forEach((row) => {
@@ -177,24 +217,18 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
-      console.log(val);
-    },
-    cannotCSV() {
-      this.$notify.error({
-        title: "錯誤",
-        message: "請選擇欲匯出之項目",
-      });
     },
   },
   mounted() {
     this.$store.dispatch("loadingHandler", true);
+    this.getKeyClass();
     this.getList();
   },
 };
 </script>
 
 <style lang="scss">
-.keywordAnalysis {
+.wordManage {
   width: 100%;
   height: 100vh;
   position: relative;
@@ -240,7 +274,7 @@ export default {
       margin-bottom: 16px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-around;
 
       .sDate,
       .eDate {
@@ -255,7 +289,6 @@ export default {
 
         .el-input {
           min-width: 350px !important;
-          max-width: 350px !important;
         }
       }
     }
@@ -264,10 +297,10 @@ export default {
       width: 100%;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-around;
 
       .kind,
-      .func {
+      .sort {
         width: 100%;
         display: flex;
         align-items: center;
@@ -354,16 +387,16 @@ export default {
     }
   }
 
-  // .addkeywordAnalysisModal {
-  //   .el-dialog {
-  //     &__body {
-  //       strong {
-  //         font-size: 20px;
-  //         text-decoration: underline;
-  //         letter-spacing: 2px;
-  //       }
-  //     }
-  //   }
-  // }
+  .addWordManageModal {
+    .el-dialog {
+      &__body {
+        strong {
+          font-size: 20px;
+          text-decoration: underline;
+          letter-spacing: 2px;
+        }
+      }
+    }
+  }
 }
 </style>

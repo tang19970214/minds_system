@@ -11,12 +11,6 @@
 
           <div class="detailPage__leftBox--newsContent">
             <div class="markKeyWord">
-              <div class="markKeyWord__title">
-                <!-- <strong>關鍵字：</strong>
-                <p v-for="(item, idx) in queries" :key="idx">{{item}}</p>
-                <a v-if="queries.length > 0" @click="queries = []">清空</a> -->
-              </div>
-
               <div class="markKeyWord__markIcon">
                 <el-tooltip effect="dark" content="國家" placement="top">
                   <font-awesome-icon icon="flag" @click="markTextHighlight('Nation')" />
@@ -43,8 +37,10 @@
           <div class="detailPage__rightBox--tagBox" v-for="item in tagGroup" :key="item.id">
             <div class="header" :style="{background: getBG(item.id)}">
               <strong>{{item.title}}</strong>
+              <i class="el-icon-plus" v-if="!item.require" @click="collapseTag(item.id)"></i>
+              <i class="el-icon-minus" v-else @click="collapseTag(item.id)"></i>
             </div>
-            <div class="body">
+            <div class="body" v-if="item.require">
               <div v-if="collapseList[item.value].length > 0">
                 <el-tag type="info" v-for="(items, idx) in collapseList[item.value]" :key="idx">
                   <strong v-if="item.value == 'Nation' || item.value == 'Place'">{{items.w}}</strong>
@@ -78,10 +74,10 @@ export default {
       },
       detailList: {},
       tagGroup: [
-        { id: 1, title: "國家", value: "Nation" },
-        { id: 2, title: "地點", value: "Place" },
-        { id: 3, title: "人名", value: "TitlePeople" },
-        { id: 4, title: "組織", value: "Org" },
+        { id: 0, title: "國家", value: "Nation", require: true },
+        { id: 1, title: "地點", value: "Place", require: false },
+        { id: 2, title: "人名", value: "TitlePeople", require: false },
+        { id: 3, title: "組織", value: "Org", require: false },
       ],
       collapseList: null,
       tagName: "",
@@ -93,16 +89,16 @@ export default {
       return (id) => {
         let setBG = "";
         switch (id) {
-          case 1:
+          case 0:
             setBG = "#BBFFFF";
             break;
-          case 2:
+          case 1:
             setBG = "#BBFFBB";
             break;
-          case 3:
+          case 2:
             setBG = "#FFFFCE";
             break;
-          case 4:
+          case 3:
             setBG = "#FFD9EC";
             break;
         }
@@ -167,6 +163,13 @@ export default {
       }
       this.queries = setKeyWord;
       this.tagName = val;
+    },
+    /* tagGroup收合 */
+    collapseTag(id) {
+      this.tagGroup.map(
+        (item, index) =>
+          (item.require = index === id ? (item.require = !item.require) : false)
+      );
     },
     /* 加入專卷分析 */
     joinProjEdit() {
@@ -239,36 +242,9 @@ export default {
           padding-bottom: 8px;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-
-          &__title {
-            width: 80%;
-            display: flex;
-            align-items: center;
-
-            p {
-              margin: 0;
-              padding-right: 8px;
-
-              // &::after {
-              //   content: "、";
-              // }
-
-              // &:last-child {
-              //   background: crimson;
-              // }
-            }
-
-            a {
-              font-size: 10px;
-              color: cornflowerblue;
-              text-decoration: underline;
-              cursor: pointer;
-            }
-          }
+          justify-content: flex-end;
 
           &__markIcon {
-            width: 20%;
             padding: 8px;
             box-sizing: border-box;
             display: flex;
@@ -338,11 +314,19 @@ export default {
           border-bottom: 1px solid #eee;
           display: flex;
           align-items: center;
+          justify-content: space-between;
           color: #191970;
 
           i {
+            padding: 4px 8px;
             font-weight: bold;
             color: #191970;
+            transition: 0.4s;
+            cursor: pointer;
+
+            &:hover {
+              transform: scale(1.3);
+            }
           }
         }
 

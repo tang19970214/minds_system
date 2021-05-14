@@ -46,7 +46,11 @@
       <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
         <el-table-column type="selection" width="50"></el-table-column>
         <el-table-column label="序號" type="index" width="50"></el-table-column>
-        <el-table-column label="新聞標題" prop="newsTitle"></el-table-column>
+        <el-table-column label="新聞標題">
+          <template slot-scope="scope">
+            <a class="projSearch__listBox--goDetailPage" @click="goDetailPage(scope.row)">{{ scope.row.newsTitle }}</a>
+          </template>
+        </el-table-column>
         <el-table-column label="新聞時間" width="180">
           <template slot-scope="scope">{{ scope.row.newsTime | moment("YYYY-MM-DD HH:mm") }}</template>
         </el-table-column>
@@ -124,6 +128,15 @@ export default {
       };
       this.getTableData(listQuery);
     },
+    /* 前往新聞詳細頁 */
+    goDetailPage(data) {
+      let routeUrl = this.$router.resolve({
+        name: "infoDetail",
+        params: { id: data.newsId },
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+
     openRelationAnalysis() {
       let routeUrl = this.$router.resolve({ name: "relationAnalysis" });
       window.open(routeUrl.href, "_blank");
@@ -234,6 +247,12 @@ export default {
           letter-spacing: 2px;
         }
       }
+    }
+
+    &--goDetailPage {
+      color: #0645ad;
+      text-decoration: underline;
+      cursor: pointer;
     }
   }
 }

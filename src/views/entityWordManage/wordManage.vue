@@ -36,7 +36,7 @@
 
           <div class="sort">
             <div class="sort__title">
-              <label>實體詞分類：</label>
+              <label>實體名稱：</label>
             </div>
             <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇" no-data-text="無數據" :disabled="listQuery.TermTypeId !== 3">
               <el-option label="請選擇" :value="0"></el-option>
@@ -63,7 +63,7 @@
         </span>
       </div>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
+      <el-table ref="multipleTable" :data="tableData" :cell-style="{padding: '3px', height: '20px'}" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
         <el-table-column type="index" label="序號" width="60"></el-table-column>
         <el-table-column label="實體詞分類">
           {{getEntity(listQuery.EntityTypeId)}}

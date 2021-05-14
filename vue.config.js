@@ -14,7 +14,7 @@ module.exports = {
             warnings: true,
             errors: false,
         },
-        proxy: {
+       proxy: {
             //設定代理
             "/api": {
                 target: "http://msapi.autoware.com.tw/api/", // 介面的域名
