@@ -120,8 +120,8 @@ const routes = [
       hideMenu: false
     }
   },
-  /* 6 實體詞庫管理 */
-  /* 6.1 實體詞庫管理/實體管理 */
+  /* 6 詞庫管理 */
+  /* 6.1 詞庫管理/實體分類管理 */
   {
     path: '/entityManage',
     name: 'entityManage',
@@ -130,11 +130,47 @@ const routes = [
       hideMenu: false
     }
   },
-  /* 6.2 實體詞庫管理/詞庫管理 */
+  /* 6.2 詞庫管理/實體詞維護 */
   {
     path: '/wordManage',
     name: 'wordManage',
     component: () => import('../views/entityWordManage/wordManage.vue'),
+    meta: {
+      hideMenu: false
+    }
+  },
+  /* 6.3 詞庫管理/監控詞維護 */
+  {
+    path: '/monitorManage',
+    name: 'monitorManage',
+    component: () => import('../views/entityWordManage/monitorManage.vue'),
+    meta: {
+      hideMenu: false
+    }
+  },
+  /* 6.4 詞庫管理/過濾詞維護 */
+  {
+    path: '/filterManage',
+    name: 'filterManage',
+    component: () => import('../views/entityWordManage/filterManage.vue'),
+    meta: {
+      hideMenu: false
+    }
+  },
+  /* 6.5 詞庫管理/同義詞維護 */
+  {
+    path: '/synonymManage',
+    name: 'synonymManage',
+    component: () => import('../views/entityWordManage/synonymManage.vue'),
+    meta: {
+      hideMenu: false
+    }
+  },
+  /* 6.6 詞庫管理/新詞維護 */
+  {
+    path: '/newManage',
+    name: 'newManage',
+    component: () => import('../views/entityWordManage/newManage.vue'),
     meta: {
       hideMenu: false
     }

@@ -26,11 +26,11 @@
         <div class="wordManage__searchBox--kindAndSort">
           <div class="kind">
             <div class="kind__title">
-              <label>維護詞庫類別：</label>
+              <label>實體詞分類：</label>
             </div>
-            <el-select v-model="listQuery.TermTypeId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
+            <el-select v-model="getCustDefsCatId" @change="getWordClass" placeholder="請選擇詞庫類別" no-data-text="無數據">
               <el-option label="請選擇" :value="0"></el-option>
-              <el-option :label="item.termName" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
+              <el-option :label="item.name" :value="item.id" v-for="item in wordClassList" :key="item.id"></el-option>
             </el-select>
           </div>
 
@@ -38,9 +38,9 @@
             <div class="sort__title">
               <label>實體名稱：</label>
             </div>
-            <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇" no-data-text="無數據" :disabled="listQuery.TermTypeId !== 3">
+            <el-select v-model="listQuery.EntityTypeId" placeholder="請選擇" no-data-text="無數據" :disabled="entityList.length == 0">
               <el-option label="請選擇" :value="0"></el-option>
-              <el-option v-for="item in entityList" :key="item.id" :label="item.entityName" :value="item.entityId"></el-option>
+              <el-option v-for="item in entityList" :key="item.id" :label="item.custPosName" :value="item.custPos"></el-option>
             </el-select>
           </div>
         </div>
@@ -94,15 +94,15 @@
     </div>
 
     <!-- modal -->
-    <el-dialog class="addWordManageModal" :title="'新增' + addWordManageTitle" :visible.sync="openAddWordManage" width="50%" center>
+    <el-dialog class="addWordManageModal" :title="'新增『' + addWordManageTitle + '』'" :visible.sync="openAddWordManage" width="50%" center>
       <el-form :model="addWordManage" :rules="rules_openAddWordManage" ref="ruleForm_openAddWordManage" label-width="130px">
         <el-form-item label="詞庫類別">
           <strong>{{addWordManageTitle}}</strong>
         </el-form-item>
-        <el-form-item :label="addWordManageTitle + '分類'" prop="Name">
+        <el-form-item label="實體詞分類" prop="Name">
           <el-input v-model="addWordManage.Name"></el-input>
         </el-form-item>
-        <el-form-item label="備註" prop="Memo">
+        <el-form-item label="備註">
           <el-input type="textarea" v-model="addWordManage.Memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
         </el-form-item>
       </el-form>
@@ -148,13 +148,14 @@ export default {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         OrgId: 1,
         Query: "", // keyword
-        TermTypeId: 0, // 選擇詞庫類別
+        TermTypeId: 3, // 選擇詞庫類別
         EntityTypeId: 0, // 選擇實體詞分類
         sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
         eDate: moment().format("YYYY-MM-DD"),
         Page: 1,
         PageSize: 10,
       },
+      getCustDefsCatId: "",
       wordClassList: [],
       entityList: [],
       tableData: [],
@@ -173,7 +174,6 @@ export default {
       addWordManageTitle: "",
       rules_openAddWordManage: {
         Name: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
-        Memo: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
       },
 
       /* edit Modal */
@@ -197,14 +197,31 @@ export default {
   methods: {
     getKeyClass() {
       this.$api
-        .getTermTypeList({
+        .getCatList({
           UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
         })
         .then((res) => {
           this.wordClassList = res.data;
         });
     },
+    /* 取得實體詞分類 */
+    getWordClass(val) {
+      if (!!val) {
+        this.getEntityTypeList();
+      } else {
+        this.listQuery.EntityTypeId = 0;
+      }
+    },
     getEntityTypeList() {
+      let custQuery = {
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+        catId: this.getCustDefsCatId,
+      };
+      this.$api.getCustDefsList(custQuery).then((res) => {
+        console.log(res);
+        this.entityList = res.data;
+      });
+      return;
       this.$api
         .getEntityTypeList({
           UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
@@ -212,14 +229,6 @@ export default {
         .then((res) => {
           this.entityList = res.data;
         });
-    },
-    /* 取得所選詞庫類別 */
-    getWordClass(val) {
-      if (val == 3) {
-        this.getEntityTypeList();
-      } else {
-        this.listQuery.EntityTypeId = 0;
-      }
     },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
@@ -236,7 +245,7 @@ export default {
     },
     /* 開啟新增詞庫類別modal */
     openAddWordManageModal() {
-      if (!this.listQuery.TermTypeId) {
+      if (!this.getCustDefsCatId) {
         this.$notify({
           title: "警告",
           message: "請選擇欲新增之詞庫類別",
@@ -244,8 +253,8 @@ export default {
         });
       } else {
         this.addWordManageTitle = this.wordClassList.filter(
-          (res) => res.id == this.listQuery.TermTypeId
-        )[0].termName;
+          (res) => res.id == this.getCustDefsCatId
+        )[0].name;
         this.openAddWordManage = true;
       }
     },
@@ -253,7 +262,7 @@ export default {
       this.$refs.ruleForm_openAddWordManage.validate((valid) => {
         if (valid) {
           this.$store.dispatch("loadingHandler", true);
-          this.addWordManage.TermTypeId = this.listQuery.TermTypeId;
+          this.addWordManage.TermTypeId = this.getCustDefsCatId;
           this.$api.addCat(this.addWordManage).then((res) => {
             if (res.data) {
               this.$notify({

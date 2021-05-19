@@ -175,7 +175,7 @@ export default {
     joinProjEdit() {
       let routeUrl = this.$router.resolve({
         name: "projEdit",
-        query: { chooseID: JSON.stringify([this.detailList.id]) },
+        query: { chooseID: JSON.stringify([[this.detailList]]) },
       });
       window.open(routeUrl.href, "_blank");
     },

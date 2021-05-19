@@ -170,16 +170,17 @@ export default {
     /* 加入專卷分析 */
     goProjEdit() {
       if (this.selectData.length > 0) {
-        const dataID = [];
-        this.selectData.forEach((res) => {
-          res.forEach((resp) => {
-            dataID.push(resp.id);
-          });
-        });
+        // const dataID = [];
+        // this.selectData.forEach((res) => {
+        //   res.forEach((resp) => {
+        //     dataID.push(resp.id);
+        //   });
+        // });
         let routeUrl = this.$router.resolve({
           name: "projEdit",
           query: {
-            chooseID: JSON.stringify(dataID),
+            chooseID: JSON.stringify(this.selectData),
+            pageSize: this.listQuery.pageSize,
           },
         });
         window.open(routeUrl.href, "_blank");

@@ -537,13 +537,9 @@ export default {
     // 編輯分析專卷
     editProjEdit() {
       if (this.multipleSelection.length > 0) {
-        const dataID = [];
-        this.multipleSelection.forEach((element) => {
-          dataID.push(element.newsId);
-        });
         let routeUrl = this.$router.resolve({
           name: "projEdit",
-          query: { chooseID: JSON.stringify(dataID) },
+          query: { chooseID: JSON.stringify([this.multipleSelection]) },
         });
         window.open(routeUrl.href, "_blank");
       } else {

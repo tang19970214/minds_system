@@ -2,11 +2,17 @@
   <div class="home">
     <div class="home__searchBox">
       <strong>最近1日新增資料</strong>
-      <!-- 長條圖 -->
-      <div id="d3Chart" v-if="sampleData.length > 0"></div>
-      <div class="home__searchBox--noData" v-else>
-        <label>本日無新增資料</label>
-      </div>
+
+      <el-tabs tab-position="left">
+        <el-tab-pane label="新聞">
+          <!-- 長條圖 -->
+          <div id="d3Chart" v-if="sampleData.length > 0"></div>
+          <div class="home__searchBox--noData" v-else>
+            <label>本日無新增資料</label>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="判決書">尚無</el-tab-pane>
+      </el-tabs>
     </div>
 
     <div class="home__listBox" id="contentBody">
@@ -102,16 +108,6 @@ export default {
             });
           });
         }
-        // let restoreData = this.tableData
-        //   .map((item, index) => {
-        //     return this.selectionIds.includes(item.id) ? index : false;
-        //   })
-        //   .filter((item) => item !== false);
-        // restoreData.forEach((item) => {
-        //   console.log("我有設定", this.tableData[item]);
-        //   this.$refs.multipleTable.toggleRowSelection(this.tableData[item]);
-        // });
-
         this.$store.dispatch("loadingHandler", false);
       });
     },
@@ -163,16 +159,11 @@ export default {
     /* 加入專卷分析 */
     goProjEdit() {
       if (this.selectData.length > 0) {
-        const dataID = [];
-        this.selectData.forEach((res) => {
-          res.forEach((resp) => {
-            dataID.push(resp.id);
-          });
-        });
         let routeUrl = this.$router.resolve({
           name: "projEdit",
           query: {
-            chooseID: JSON.stringify(dataID),
+            chooseID: JSON.stringify(this.selectData),
+            pageSize: this.listQuery.pageSize,
           },
         });
         window.open(routeUrl.href, "_blank");
@@ -340,6 +331,17 @@ export default {
       color: red;
       font-weight: bolder;
       // text-decoration: underline;
+    }
+
+    .el-tabs {
+      &__active-bar {
+        background-color: #191970;
+      }
+
+      .is-active {
+        font-weight: bold;
+        color: #191970;
+      }
     }
   }
 

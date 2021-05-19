@@ -61,7 +61,7 @@
 
       <div class="projEdit__rightBox--contentBox">
         <div class="relationBtn">
-          <span @click="openSearchRelationModal()">
+          <span @click="openSearchRelation = true">
             <i class="el-icon-search"></i>
             <strong>搜尋關聯分析內容</strong>
           </span>
@@ -181,10 +181,11 @@ export default {
       projSortList: [],
       projThemeList: [],
       getTheme: "",
-      listQuery: {
-        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        ids: JSON.parse(this.$route.query.chooseID),
-      },
+      getThemeNews: [],
+      // listQuery: {
+      //   userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+      //   ids: JSON.parse(this.$route.query.chooseID),
+      // },
       listData: [],
       newsListQuery: {
         userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
@@ -252,6 +253,12 @@ export default {
     },
   },
   methods: {
+    /* 首次載入設置selectData */
+    setSelectData() {
+      this.selectData = this.$route.query.chooseID
+        ? JSON.parse(this.$route.query.chooseID)
+        : [];
+    },
     /* 獲取專卷 */
     getProjSortList() {
       this.$api
@@ -268,19 +275,6 @@ export default {
             return p;
           });
         });
-    },
-    /* 獲取穿梭框資料 */
-    getRelationList() {
-      this.relationList = this.listData.map((res) => {
-        return {
-          key: res.id,
-          label: res.newsTitle,
-          value: res.source,
-          disabled: true,
-        };
-      });
-      this.relationValue = this.listData.map((res) => res.id);
-      this.copyRelationValue = this.relationValue;
     },
     /* 獲取所選專卷分類 */
     getProjData(val) {
@@ -300,46 +294,93 @@ export default {
       } else {
         this.rightBoxData = {};
       }
+      this.getNewsListByIds();
       this.getTheme = "";
-      this.getRelationList();
+    },
+
+    /* 以route.query.chooseID來獲取所選新聞 */
+    async getNewsListByIds(themeIds) {
+      this.$store.dispatch("loadingHandler", true);
+      if (!!this.$route.query.chooseID) {
+        let getIds = [];
+        JSON.parse(this.$route.query.chooseID).map((item) => {
+          item.map((res) => {
+            getIds.push(res.id);
+          });
+        });
+        if (!!themeIds) {
+          getIds = [...new Set(getIds.concat(themeIds))];
+        }
+        const listQuery = {
+          userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+          ids: getIds,
+        };
+        await this.$api.getNewsListByIds(listQuery).then((res) => {
+          this.listData = res.data.data;
+          this.getRelationList();
+        });
+      } else if (!!themeIds) {
+        const listQuery = {
+          userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+          ids: themeIds,
+        };
+        await this.$api.getNewsListByIds(listQuery).then((res) => {
+          this.listData = res.data.data;
+          this.getRelationList();
+        });
+      } else {
+        this.listData = [];
+        this.getRelationList();
+      }
     },
     /* 選擇專卷主題並帶入現有分析內容 */
     async chooseTheme(val) {
       this.$store.dispatch("loadingHandler", true);
       /* 將穿梭框重置 */
-      this.relationValue = this.copyRelationValue;
-      /* 檢查是否已選擇主題 */
-      const getNews = this.relationList.filter((resp) => resp.value !== "主題");
+      this.getNewsListByIds();
+      /* ------------------ */
       this.getTheme = this.getChild(this.projThemeList)[0]?.children.filter(
         (res) => res.name == val
       )[0];
-
-      /* 有選擇主題時解鎖新聞 */
-      if (val) {
-        getNews.map((item) => {
-          item.disabled = false;
-          return item;
-        });
-      }
-
       const topicQuery = {
         UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
         TopicId: this.getTheme.id,
         Page: 1,
-        PageSize: 10,
+        PageSize: 999,
       };
       await this.$api.getDataByTopicId(topicQuery).then((res) => {
         if (res.data.length > 0) {
-          const getSaveIds = res.data.map((item) => item.newsId);
-          this.relationValue = this.relationValue.filter(
-            (i) => !getSaveIds.includes(i)
-          );
+          this.getThemeNews = res.data;
+          // 有主題下的新聞，將上頁所選及回傳的新聞混合
+          this.getNewsListByIds(res.data.map((item) => item.newsId));
         } else {
           this.relationValue = this.copyRelationValue;
         }
         this.$store.dispatch("loadingHandler", false);
       });
     },
+    /* 獲取穿梭框資料 */
+    getRelationList() {
+      this.relationList = this.listData.map((res) => {
+        return {
+          key: res.id,
+          label: res.newsTitle,
+          value: res.source,
+          disabled: !this.getTheme,
+        };
+      });
+      this.relationValue = this.listData.map((res) => res.id);
+      this.copyRelationValue = this.relationValue;
+      if (this.getTheme) {
+        const getSaveIds = this.getThemeNews.map((item) => item.newsId);
+        this.relationValue = this.relationValue.filter(
+          (i) => !getSaveIds.includes(i)
+        );
+      }
+      this.$store.dispatch("loadingHandler", false);
+    },
+
+    // =================================================================
     /* 新增專卷分類 */
     addSort() {
       this.$refs.ruleForm_addProjSort.validate((valid) => {
@@ -417,8 +458,9 @@ export default {
         }
       });
     },
+    // =================================================================
 
-    /* 取得左框資訊 */
+    /* 移動時取得左框資訊 */
     getObject(arr) {
       const getAllValue = this.relationList.map((v) => v.key);
       this.leftRelationIds = getAllValue.filter((i) => !arr.includes(i));
@@ -466,21 +508,9 @@ export default {
           type: "warning",
         });
       }
-      return;
     },
 
     // 搜尋關聯分析內容modal
-    /* 開啟 */
-    openSearchRelationModal() {
-      console.log(this.copyRelationValue);
-      let getArr = this.tableData.filter((res) =>
-        this.copyRelationValue.includes(res.id)
-      );
-      getArr.forEach((item) => {
-        this.$refs.multipleTable.toggleRowSelection(item, true);
-      });
-      this.openSearchRelation = true;
-    },
     /* 取得搜尋來源資料 */
     getSearchList() {
       const searchQuery = {
@@ -491,23 +521,6 @@ export default {
         this.searchList = res.data;
       });
     },
-    /* 獲取所選新聞 */
-    async getNewsListByIds() {
-      await this.$api.getNewsListByIds(this.listQuery).then((res) => {
-        this.listData = res.data.data;
-        this.$store.dispatch("loadingHandler", false);
-      });
-    },
-    /* 首次載入設置selectData */
-    setSelectData() {
-      // console.log(JSON.parse(this.$route.query.chooseID));
-      this.selectData = [
-        this.listData.filter((res) =>
-          JSON.parse(this.$route.query.chooseID).includes(res.id)
-        ),
-      ];
-      console.log(this.selectData);
-    },
     /* 獲取新聞列表 */
     getNewsList() {
       this.$api.getNewsList(this.newsListQuery).then((res) => {
@@ -516,7 +529,6 @@ export default {
         // 設置已勾選狀態
         if (this.selectData[this.newsListQuery.page - 1] !== undefined) {
           var selectUserList = this.selectData[this.newsListQuery.page - 1];
-          console.log(selectUserList);
           this.$nextTick(() => {
             this.tableData.forEach((item) => {
               selectUserList.forEach((items) => {
@@ -567,45 +579,20 @@ export default {
         this.$store.dispatch("loadingHandler", true);
         let chooseData = [];
         let chooseIDX = [];
-        this.selectData.forEach((res) => {
-          let getItems = {
-            key: res.id,
-            label: res.newsTitle,
-            value: res.source,
-            disabled: !!this.getTheme ? false : true,
-          };
-          chooseData.push(getItems);
-          chooseIDX.push(res.id);
-          this.copyRelationValue = chooseIDX;
+        this.selectData.forEach((item) => {
+          item.forEach((res) => {
+            let getItems = {
+              key: res.id,
+              label: res.newsTitle,
+              value: res.source,
+              disabled: !!this.getTheme ? false : true,
+            };
+            chooseData.push(getItems);
+            chooseIDX.push(res.id);
+          });
         });
-        console.log({ 新資料: chooseData, 新key: chooseIDX });
-        this.relationList = chooseData;
-        this.relationValue = chooseIDX;
+        this.getNewsListByIds(chooseIDX);
         this.openSearchRelation = false;
-        this.$store.dispatch("loadingHandler", false);
-      } else {
-        this.$notify({
-          title: "警告",
-          message: "請至少選擇一筆資料！",
-          type: "warning",
-        });
-      }
-      this.$refs.multipleTable.clearSelection();
-
-      return;
-
-      /* --------------------- */
-      if (this.selectData.length > 0) {
-        this.$store.dispatch("loadingHandler", true);
-        this.$router.push({
-          name: "projEdit",
-          query: {
-            chooseID: JSON.stringify(this.selectData.map((i) => i.id)),
-          },
-        });
-        this.getRelationList();
-        this.openSearchRelation = false;
-        this.$store.dispatch("loadingHandler", false);
       } else {
         this.$notify({
           title: "警告",
@@ -631,15 +618,16 @@ export default {
   async mounted() {
     this.$store.dispatch("loadingHandler", true);
     this.openSearchRelation = false;
-    this.getProjSortList();
-    this.getSearchList();
-    /* 獲取所選新聞 */
-    await this.getNewsListByIds();
     this.setSelectData();
+    this.getProjSortList();
+    /* 獲取前頁所選新聞 */
+    await this.getNewsListByIds();
     /* 獲取新聞列表 */
+    this.getSearchList();
+    if (!!this.$route.query.pageSize) {
+      this.newsListQuery.pageSize = Number(this.$route.query.pageSize);
+    }
     this.getNewsList();
-    /* 設置穿梭框 */
-    this.getRelationList();
   },
 };
 </script>
