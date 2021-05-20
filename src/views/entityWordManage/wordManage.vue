@@ -97,7 +97,7 @@
     <el-dialog class="addWordManageModal" :title="'新增『' + addWordManageTitle + '』'" :visible.sync="openAddWordManage" width="50%" center>
       <el-form :model="addWordManage" :rules="rules_openAddWordManage" ref="ruleForm_openAddWordManage" label-width="130px">
         <el-form-item label="詞庫類別">
-          <strong>{{addWordManageTitle}}</strong>
+          <strong>實體詞</strong>
         </el-form-item>
         <el-form-item label="實體詞分類" prop="Name">
           <el-input v-model="addWordManage.Name"></el-input>
@@ -116,7 +116,7 @@
     <el-dialog class="editWordManageModal" title="編輯詞庫" :visible.sync="openEditWordManage" width="50%" center>
       <el-form :model="editWordManage" :rules="rules_openEditWordManage" ref="ruleForm_openEditWordManage" label-width="130px">
         <el-form-item label="詞庫類別">
-          <strong>{{editWordManage.termTypeId}}</strong>
+          <strong>實體詞</strong>
         </el-form-item>
         <el-form-item :label="editWordManageTitle + '分類'" prop="term">
           <el-input v-model="editWordManage.term"></el-input>
@@ -221,18 +221,10 @@ export default {
         console.log(res);
         this.entityList = res.data;
       });
-      return;
-      this.$api
-        .getEntityTypeList({
-          UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        })
-        .then((res) => {
-          this.entityList = res.data;
-        });
     },
     async getList() {
       await this.$api.getTermInfoList(this.listQuery).then((res) => {
-        this.tableData = res.data;
+        this.tableData = res.data.data;
         this.listNum = res.data.count;
         this.$store.dispatch("loadingHandler", false);
       });
@@ -537,7 +529,8 @@ export default {
     }
   }
 
-  .addWordManageModal {
+  .addWordManageModal,
+  .editWordManageModal {
     .el-dialog {
       &__body {
         strong {

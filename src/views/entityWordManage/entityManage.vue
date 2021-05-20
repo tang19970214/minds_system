@@ -9,7 +9,7 @@
         <div class="entityManagePage__searchBox--sort">
           <label>實體分類：</label>
           <el-select v-model="listQuery.catId" placeholder="請選擇實體分類" no-data-text="無數據" @change="filterCatId">
-            <el-option label="全部" value=""></el-option>
+            <el-option label="全部" :value="0"></el-option>
             <el-option :label="item.name" :value="item.id" v-for="item in entitySortData" :key="item.id"></el-option>
           </el-select>
           <i class="el-icon-edit" @click="openEntityModal('edit')"></i>
@@ -185,7 +185,7 @@ export default {
     return {
       listQuery: {
         UserId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        catId: "",
+        catId: 0,
       },
       openSearchBox: true,
       getTabName: "0",
@@ -362,28 +362,6 @@ export default {
 
     entityFunc(val, item) {
       switch (val) {
-        // case "play":
-        //   this.$confirm("確定要啟動此實體嗎？", "提示", {
-        //     confirmButtonText: "確定",
-        //     cancelButtonText: "取消",
-        //     type: "warning",
-        //   })
-        //     .then(() => {
-        //       this.updateCustDefs(item, 1);
-        //     })
-        //     .catch(() => {});
-        //   break;
-        // case "stop":
-        //   this.$confirm("確定要停止此實體嗎？", "提示", {
-        //     confirmButtonText: "確定",
-        //     cancelButtonText: "取消",
-        //     type: "warning",
-        //   })
-        //     .then(() => {
-        //       this.updateCustDefs(item, 0);
-        //     })
-        //     .catch(() => {});
-        //   break;
         case "add":
           this.entityList = {
             catId: "",
