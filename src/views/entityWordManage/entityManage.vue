@@ -1,10 +1,6 @@
 <template>
   <div class="entityManagePage">
-    <div class="entityManagePage__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="entityManagePage__searchBox" v-if="openSearchBox">
         <div class="entityManagePage__searchBox--sort">
           <label>實體分類：</label>
@@ -18,6 +14,10 @@
         </div>
       </div>
     </transition>
+
+    <div class="entityManagePage__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
 
     <div class="entityManagePage__listBox">
       <div class="entityManagePage__listBox--addEntity">
@@ -472,7 +472,7 @@ export default {
         if (res.data) {
           this.$notify({
             title: "成功",
-            message: "新增成功！",
+            message: "刪除成功！",
             type: "success",
           });
         } else {
@@ -556,23 +556,25 @@ export default {
   position: relative;
 
   &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #191970;
 
-    strong {
-      color: white;
-    }
+    i {
+      font-size: 20px;
+      padding: 0 16px;
+      transition: 0.4s;
+      cursor: pointer;
 
-    &:hover {
-      background: #038bb4;
+      &.goRound {
+        transform: rotate(180deg);
+      }
+
+      &:hover {
+        color: #00abb9;
+      }
     }
   }
 

@@ -1,10 +1,6 @@
 <template>
   <div class="wordManage">
-    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="wordManage__searchBox" v-if="openSearchBox">
         <div class="wordManage__searchBox--dateRange">
           <div class="sDate">
@@ -54,6 +50,10 @@
         </div>
       </div>
     </transition>
+
+    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
 
     <div class="wordManage__listBox">
       <div class="wordManage__listBox--add">

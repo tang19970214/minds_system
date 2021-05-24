@@ -274,14 +274,22 @@ export default {
             });
             return p;
           });
+          // 專卷維護頁進入後自動帶值
+          if (!!this.$route.query.projTheme) {
+            this.searchSort = this.$route.query.projSort;
+            this.getProjData(this.searchSort);
+            this.chooseTheme(this.$route.query.projTheme);
+          }
         });
     },
     /* 獲取所選專卷分類 */
     getProjData(val) {
+      console.log(val);
       if (!!val) {
         const getFather = this.projThemeList.filter(
           (res) => res.name == val
         )[0];
+        console.log(this.projThemeList);
         let childData = [];
         getFather.children.forEach((element) => {
           childData.push(element.name);
@@ -304,7 +312,7 @@ export default {
       if (!!this.$route.query.chooseID) {
         let getIds = [];
         JSON.parse(this.$route.query.chooseID).map((item) => {
-          item.map((res) => {
+          item?.map((res) => {
             getIds.push(res.id);
           });
         });
@@ -619,7 +627,13 @@ export default {
     this.$store.dispatch("loadingHandler", true);
     this.openSearchRelation = false;
     this.setSelectData();
-    this.getProjSortList();
+    await this.getProjSortList();
+    // if (!!this.$route.query.projTheme) {
+    //   this.searchSort = this.$route.query.projSort;
+    // this.getProjData(this.$route.query.projSort);
+    // this.getProjData(this.searchSort);
+    //   this.projTheme = this.$route.query.projTheme;
+    // }
     /* 獲取前頁所選新聞 */
     await this.getNewsListByIds();
     /* 獲取新聞列表 */

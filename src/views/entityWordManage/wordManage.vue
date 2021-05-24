@@ -1,28 +1,7 @@
 <template>
   <div class="wordManage">
-    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="wordManage__searchBox" v-if="openSearchBox">
-        <div class="wordManage__searchBox--dateRange">
-          <div class="sDate">
-            <div class="sDate__title">
-              <label>開始日期：</label>
-            </div>
-            <el-date-picker v-model="listQuery.sDate" type="date" placeholder="請選擇開始日期" format="yyyy-MM-dd">
-            </el-date-picker>
-          </div>
-          <div class="eDate">
-            <div class="eDate__title">
-              <label>結束日期：</label>
-            </div>
-            <el-date-picker v-model="listQuery.eDate" type="date" placeholder="請選擇開始日期">
-            </el-date-picker>
-          </div>
-        </div>
-
         <div class="wordManage__searchBox--kindAndSort">
           <div class="kind">
             <div class="kind__title">
@@ -54,6 +33,10 @@
         </div>
       </div>
     </transition>
+
+    <div class="wordManage__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
 
     <div class="wordManage__listBox">
       <div class="wordManage__listBox--add">
@@ -150,8 +133,8 @@ export default {
         Query: "", // keyword
         TermTypeId: 3, // 選擇詞庫類別
         EntityTypeId: 0, // 選擇實體詞分類
-        sDate: moment().add(-1, "y").format("YYYY-MM-DD"),
-        eDate: moment().format("YYYY-MM-DD"),
+        sDate: "1990-01-01",
+        eDate: "2050-12-30",
         Page: 1,
         PageSize: 10,
       },
@@ -376,23 +359,25 @@ export default {
   position: relative;
 
   &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #191970;
 
-    strong {
-      color: white;
-    }
+    i {
+      font-size: 20px;
+      padding: 0 16px;
+      transition: 0.4s;
+      cursor: pointer;
 
-    &:hover {
-      background: #038bb4;
+      &.goRound {
+        transform: rotate(180deg);
+      }
+
+      &:hover {
+        color: #00abb9;
+      }
     }
   }
 
@@ -409,30 +394,6 @@ export default {
       color: #2a2a2a;
       letter-spacing: 2px;
       font-size: 18px;
-    }
-
-    &--dateRange {
-      width: 100%;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-
-      .sDate,
-      .eDate {
-        width: 100%;
-        display: flex;
-        align-items: center;
-
-        &__title {
-          min-width: 140px;
-          max-width: 140px;
-        }
-
-        .el-input {
-          min-width: 350px !important;
-        }
-      }
     }
 
     &--kindAndSort {

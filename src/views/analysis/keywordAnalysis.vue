@@ -1,10 +1,6 @@
 <template>
   <div class="keywordAnalysis">
-    <div class="keywordAnalysis__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="keywordAnalysis__searchBox" v-if="openSearchBox">
         <div class="keywordAnalysis__searchBox--dateRange">
           <div class="sDate">
@@ -41,6 +37,10 @@
       </div>
     </transition>
 
+    <div class="keywordAnalysis__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
+
     <div class="keywordAnalysis__listBox">
       <div class="keywordAnalysis__listBox--add">
         <span v-if="multipleSelection.length == 0" @click="cannotCSV()">
@@ -63,27 +63,6 @@
         <el-table-column label="關聯關鍵字" prop="memo"></el-table-column>
       </el-table>
     </div>
-
-    <!-- modal -->
-    <!-- <el-dialog class="addkeywordAnalysisModal" title="新增實體詞" :visible.sync="openAddkeywordAnalysis" width="50%" center>
-      <el-form :model="addkeywordAnalysis" :rules="rules_openAddkeywordAnalysis" ref="ruleForm_openAddkeywordAnalysis" label-width="130px">
-        <el-form-item label="詞庫類別">
-          <strong>實體詞</strong>
-        </el-form-item>
-        <el-form-item label="實體詞分類" prop="Term">
-          <el-input v-model="addkeywordAnalysis.Term"></el-input>
-        </el-form-item>
-        <el-form-item label="備註" prop="memo">
-          <el-input type="textarea" v-model="addkeywordAnalysis.memo" :autosize="{ minRows: 5, maxRows: 8}"></el-input>
-        </el-form-item>
-      </el-form>
-
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="addEntity()">新增</el-button>
-        <el-button type="danger" @click="openAddkeywordAnalysis = false">取消</el-button>
-      </span>
-    </el-dialog> -->
-
   </div>
 </template>
 
@@ -200,23 +179,25 @@ export default {
   position: relative;
 
   &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #191970;
 
-    strong {
-      color: white;
-    }
+    i {
+      font-size: 20px;
+      padding: 0 16px;
+      transition: 0.4s;
+      cursor: pointer;
 
-    &:hover {
-      background: #038bb4;
+      &.goRound {
+        transform: rotate(180deg);
+      }
+
+      &:hover {
+        color: #00abb9;
+      }
     }
   }
 

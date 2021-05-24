@@ -1,10 +1,6 @@
 <template>
   <div class="projMaintain">
-    <div class="projMaintain__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="projMaintain__searchBox" v-if="openSearchBox">
         <!-- 專卷分類 -->
         <div class="projMaintain__searchBox--sort">
@@ -32,6 +28,10 @@
       </div>
     </transition>
 
+    <div class="projMaintain__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
+
     <div class="projMaintain__listBox">
       <el-row>
         <el-col :span="16">
@@ -51,8 +51,7 @@
         </el-col>
       </el-row>
 
-      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" empty-text="暫無數據">
-        <el-table-column type="selection" width="50"></el-table-column>
+      <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" empty-text="暫無數據">
         <el-table-column label="序號" type="index" width="50"></el-table-column>
         <el-table-column label="新聞標題">
           <template slot-scope="scope">
@@ -78,10 +77,13 @@
 
     <!-- modal -->
     <!-- 專卷分類 -->
-    <el-dialog :title="projSortModalTitle + '專卷分類'" :visible.sync="projSortModal" width="60%" center>
+    <el-dialog :title="projSortModalTitle + '專卷分類'" :visible.sync="projSortModal" width="50%" center>
       <el-form :model="projSortList" :rules="rules_projSortModal" ref="ruleForm_projSortModal" label-width="150px">
         <el-form-item label="專卷名稱" prop="name">
           <el-input v-model="projSortList.name"></el-input>
+        </el-form-item>
+        <el-form-item label="備註">
+          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 4}" v-model="projSortList.memo"></el-input>
         </el-form-item>
       </el-form>
 
@@ -93,7 +95,7 @@
     </el-dialog>
 
     <!-- 專卷主題 -->
-    <el-dialog :title="projThemeModalTitle + '專卷主題'" :visible.sync="projThemeModal" width="60%" center>
+    <el-dialog :title="projThemeModalTitle + '專卷主題'" :visible.sync="projThemeModal" width="50%" center>
       <el-form :model="projThemeList" :rules="rules_projThemeModal" ref="ruleForm_projThemeModal" label-width="150px">
         <el-form-item label="專卷分類">
           <strong class="themeModal">{{projSort}}</strong>
@@ -122,7 +124,6 @@ export default {
       allUserList: [],
       openSearchBox: true,
       tableData: [],
-      multipleSelection: [],
       /* 專卷分類 */
       projSort: "",
       sortList: [],
@@ -130,6 +131,7 @@ export default {
       projSortModalTitle: "",
       projSortList: {
         name: "",
+        memo: "",
       },
       rules_projSortModal: {
         name: [{ required: true, message: "此為必填欄位", trigger: "blur" }],
@@ -180,8 +182,8 @@ export default {
         });
     },
     /* 獲取專卷資料 */
-    getProjSort() {
-      this.$api
+    async getProjSort() {
+      await this.$api
         .getUserTopic({
           UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
         })
@@ -194,6 +196,7 @@ export default {
             });
             return p;
           });
+          this.$store.dispatch("loadingHandler", false);
         });
     },
     /* 獲取表格資料 */
@@ -268,12 +271,13 @@ export default {
     addProjSort() {
       this.$refs.ruleForm_projSortModal.validate((valid) => {
         if (valid) {
+          this.$store.dispatch("loadingHandler", true);
           const addList = {
             OrgId: 2,
             UserId: JSON.parse(window.localStorage.getItem("userInfo"))?.userId,
             Name: this.projSortList.name,
             Action: "",
-            Memo: "",
+            Memo: this.projSortList.memo,
             SortOrder: 1,
             Pid: null,
             isShare: 0,
@@ -296,6 +300,7 @@ export default {
     editProjSort() {
       this.$refs.ruleForm_projSortModal.validate((valid) => {
         if (valid) {
+          this.$store.dispatch("loadingHandler", true);
           const getData = this.sortList.filter(
             (res) => res.name == this.projSort
           )[0];
@@ -328,6 +333,7 @@ export default {
     },
     /* 刪除-專卷分類 */
     async delProjSort() {
+      this.$store.dispatch("loadingHandler", true);
       const getData = this.sortList.filter(
         (res) => res.name == this.projSort
       )[0];
@@ -422,6 +428,7 @@ export default {
     addProjTheme() {
       this.$refs.ruleForm_projThemeModal.validate((valid) => {
         if (valid) {
+          this.$store.dispatch("loadingHandler", true);
           const getData = this.sortList.filter(
             (res) => res.name == this.projSort
           )[0];
@@ -455,6 +462,7 @@ export default {
     editProjTheme() {
       this.$refs.ruleForm_projThemeModal.validate((valid) => {
         if (valid) {
+          this.$store.dispatch("loadingHandler", true);
           // 撈取子層資料帶入modal輸入框
           const getFather = this.sortList.filter(
             (res) => res.name == this.projSort
@@ -502,6 +510,7 @@ export default {
         UserId: getChild.userId,
         Ids: [getChild.id],
       };
+      this.$store.dispatch("loadingHandler", true);
       await this.$api.deleteUserTopic(delList).then((res) => {
         if (res.data) {
           this.$notify({
@@ -536,16 +545,16 @@ export default {
 
     // 編輯分析專卷
     editProjEdit() {
-      if (this.multipleSelection.length > 0) {
+      if (!!this.projTheme) {
         let routeUrl = this.$router.resolve({
           name: "projEdit",
-          query: { chooseID: JSON.stringify([this.multipleSelection]) },
+          query: { projSort: this.projSort, projTheme: this.projTheme },
         });
         window.open(routeUrl.href, "_blank");
       } else {
         this.$notify.error({
-          title: "錯誤",
-          message: "請選擇至少一項項目！",
+          title: "警告",
+          message: "請先選擇專卷主題！",
         });
       }
     },
@@ -589,9 +598,6 @@ export default {
         this.$refs.multipleTable.clearSelection();
       }
     },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
-    },
   },
   mounted() {
     this.$store.dispatch("loadingHandler", true);
@@ -608,23 +614,25 @@ export default {
   position: relative;
 
   &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #191970;
 
-    strong {
-      color: white;
-    }
+    i {
+      font-size: 20px;
+      padding: 0 16px;
+      transition: 0.4s;
+      cursor: pointer;
 
-    &:hover {
-      background: #038bb4;
+      &.goRound {
+        transform: rotate(180deg);
+      }
+
+      &:hover {
+        color: #00abb9;
+      }
     }
   }
 

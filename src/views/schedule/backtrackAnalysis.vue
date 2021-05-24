@@ -9,7 +9,7 @@
 
     <div class="analysisFrom">
       <label>分析來源：</label>
-      <el-select v-model="listQuery.Source">
+      <el-select v-model="listQuery.source" placeholder="請選擇">
         <el-option label="全部" value="0"></el-option>
         <el-option label="新聞" value="1"></el-option>
       </el-select>
@@ -17,14 +17,14 @@
 
     <div class="backtrackName">
       <label>回朔名稱：</label>
-      <el-input v-model="listQuery.Name">
+      <el-input v-model="listQuery.name">
       </el-input>
     </div>
 
     <div class="enable">
       <label>啟動：</label>
-      <el-radio v-model="listQuery.Enable" label="Y">Y</el-radio>
-      <el-radio v-model="listQuery.Enable" label="N">N</el-radio>
+      <el-radio v-model="listQuery.enable" label="Y">Y</el-radio>
+      <el-radio v-model="listQuery.enable" label="N">N</el-radio>
     </div>
 
     <div class="enableList">
@@ -34,7 +34,7 @@
       <div class="enableList__body">
         <div class="enableList__body--datetime">
           <label>YYYY/MM/DD HH:mm:ss</label>
-          <el-date-picker class="w-full" v-model="listQuery.OneTime" type="datetime" placeholder="請選擇日期時間">
+          <el-date-picker class="w-full" v-model="listQuery.oneTime" type="datetime" placeholder="請選擇日期時間">
           </el-date-picker>
           <p>24小時制（00-23）</p>
         </div>
@@ -56,13 +56,13 @@ export default {
     return {
       listQuery: {
         userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        Type: 3,
-        Name: "",
-        Enable: "Y",
-        OneTime: null,
+        type: 3,
+        name: "",
+        enable: "Y",
+        oneTime: null,
         sDate: "",
         eDate: "",
-        Source: "0",
+        source: "0",
       },
       getDateRange: "",
     };
@@ -117,6 +117,27 @@ export default {
         })
         .catch(() => {});
     },
+    getList() {
+      const infoQuery = {
+        Type: 3,
+        page: 1,
+        pageSize: 999,
+        query: "",
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+      };
+      this.$api.getScheduleList(infoQuery).then((res) => {
+        this.listQuery = res.data.filter(
+          (resp) => resp.id == this.$route.query.id
+        )[0];
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
+  },
+  mounted() {
+    if (!!this.$route.query?.id) {
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    }
   },
 };
 </script>

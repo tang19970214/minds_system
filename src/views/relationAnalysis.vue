@@ -2,7 +2,7 @@
   <div class="projEdit">
 
     <div class="projEdit__leftBox" :style="checkLeftBoxWidth.leftBox">
-      <transition name="moveL">
+      <transition name="moveB">
         <div class="body" v-if="openLeftBox">
           <div class="body__searchDateRange">
             <strong>查詢日期：</strong>
@@ -42,38 +42,12 @@
 
       <div class="projEdit__rightBox--tableBox">
         <el-table :data="tableData" style="width: 100%" border empty-text="暫無數據">
-          <el-table-column prop="date" label="日期" width="180">
-          </el-table-column>
-          <el-table-column prop="name" label="姓名" width="180">
-          </el-table-column>
-          <el-table-column prop="address" label="地址">
-          </el-table-column>
+          <el-table-column prop="date" label="日期" width="200"></el-table-column>
+          <el-table-column prop="name" label="姓名"></el-table-column>
         </el-table>
       </div>
 
     </div>
-
-    <!-- modal -->
-    <!-- add projTheme -->
-    <!-- <el-dialog title="新增專卷主題" :visible.sync="openAddProjTheme" width="50%" center>
-      <el-form :model="addProjTheme" :rules="rules_addProjTheme" ref="ruleForm_addProjTheme" label-width="110px">
-        <el-form-item label="專卷分類">
-          <strong class="modal__title">{{searchSort}}</strong>
-        </el-form-item>
-        <el-form-item label="專卷主題" prop="name">
-          <el-input v-model="addProjTheme.name"></el-input>
-        </el-form-item>
-        <el-form-item label="備註" prop="remark">
-          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 4}" v-model="addProjTheme.remark"></el-input>
-        </el-form-item>
-      </el-form>
-
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="addTheme()">新增</el-button>
-        <el-button type="danger" @click="openAddProjTheme = false">取消</el-button>
-      </span>
-    </el-dialog> -->
-
   </div>
 </template>
 
@@ -88,23 +62,19 @@ export default {
       tableData: [
         {
           date: "2016-05-02",
-          name: "王小虎",
-          address: "王小虎",
+          name: "王ＯＯ",
         },
         {
           date: "2016-05-04",
-          name: "王小虎",
-          address: "王小虎",
+          name: "王ＯＯ",
         },
         {
           date: "2016-05-01",
-          name: "王小虎",
-          address: "王小虎",
+          name: "王ＯＯ",
         },
         {
           date: "2016-05-03",
-          name: "王小虎",
-          address: "王小虎",
+          name: "王ＯＯ",
         },
       ],
     };

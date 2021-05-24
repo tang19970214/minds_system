@@ -71,34 +71,34 @@ body {
     }
 }
 
-.moveR-enter-active,
-.moveR-leave-active {
+.moveT-enter-active,
+.moveT-leave-active {
     transition: all 0.4s linear;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
-.moveR-enter,
-.moveR-leave {
-    transform: translateX(100%);
+.moveT-enter,
+.moveT-leave {
+    transform: translateY(-100%);
 }
 
-.moveR-leave-to {
-    transform: translateX(100%);
+.moveT-leave-to {
+    transform: translateY(-100%);
 }
 
-.moveL-enter-active,
-.moveL-leave-active {
+.moveB-enter-active,
+.moveB-leave-active {
     transition: all 0.4s linear;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
-.moveL-enter,
-.moveL-leave {
-    transform: translateX(-100%);
+.moveB-enter,
+.moveB-leave {
+    transform: translateY(100%);
 }
 
-.moveL-leave-to {
-    transform: translateX(-100%);
+.moveB-leave-to {
+    transform: translateY(100%);
 }
 
 .el-button {

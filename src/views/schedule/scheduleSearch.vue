@@ -1,10 +1,6 @@
 <template>
   <div class="scheduleSearchPage">
-    <div class="scheduleSearchPage__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="scheduleSearchPage__searchBox" v-if="openSearchBox">
         <div class="scheduleName">
           <label>排程名稱：</label>
@@ -24,6 +20,10 @@
         <el-button type="primary" @click="searchSchedule()">查詢</el-button>
       </div>
     </transition>
+
+    <div class="scheduleSearchPage__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
 
     <div class="scheduleSearchPage__listBox">
       <div class="scheduleSearchPage__listBox--info">
@@ -75,7 +75,7 @@
           <el-table-column fixed="right" label="操作" width="200">
             <template slot-scope="scope">
               <div class="scheduleSearchPage__listBox--userFunc">
-                <el-tooltip effect="dark" content="啟動" placement="bottom">
+                <!-- <el-tooltip effect="dark" content="啟動" placement="bottom">
                   <el-button type="text" :disabled="scope.row.enable == 'Y'" @click="operateFunc('play', scope.row)">
                     <font-awesome-icon icon="play-circle" />
                   </el-button>
@@ -84,8 +84,13 @@
                   <el-button type="text" :disabled="scope.row.enable == 'N'" @click="operateFunc('stop', scope.row)">
                     <font-awesome-icon icon="stop-circle" />
                   </el-button>
-                </el-tooltip>
+                </el-tooltip> -->
 
+                <el-tooltip effect="dark" content="編輯" placement="bottom">
+                  <el-button type="text" @click="operateFunc('edit', scope.row)">
+                    <i class="el-icon-edit"></i>
+                  </el-button>
+                </el-tooltip>
                 <el-tooltip effect="dark" content="刪除" placement="bottom">
                   <el-button type="text" @click="operateFunc('del', scope.row)">
                     <i class="el-icon-delete"></i>
@@ -176,27 +181,30 @@ export default {
     },
     operateFunc(val, item) {
       switch (val) {
-        case "play":
-          this.$confirm("確定要啟動此排程嗎？", "提示", {
-            confirmButtonText: "確定",
-            cancelButtonText: "取消",
-            type: "warning",
-          })
-            .then(() => {
-              this.updateSchedule(item, "Y");
-            })
-            .catch(() => {});
-          break;
-        case "stop":
-          this.$confirm("確定要停止此排程嗎？", "提示", {
-            confirmButtonText: "確定",
-            cancelButtonText: "取消",
-            type: "warning",
-          })
-            .then(() => {
-              this.updateSchedule(item, "N");
-            })
-            .catch(() => {});
+        // case "play":
+        //   this.$confirm("確定要啟動此排程嗎？", "提示", {
+        //     confirmButtonText: "確定",
+        //     cancelButtonText: "取消",
+        //     type: "warning",
+        //   })
+        //     .then(() => {
+        //       this.updateSchedule(item, "Y");
+        //     })
+        //     .catch(() => {});
+        //   break;
+        // case "stop":
+        //   this.$confirm("確定要停止此排程嗎？", "提示", {
+        //     confirmButtonText: "確定",
+        //     cancelButtonText: "取消",
+        //     type: "warning",
+        //   })
+        //     .then(() => {
+        //       this.updateSchedule(item, "N");
+        //     })
+        //     .catch(() => {});
+        //   break;
+        case "edit":
+          this.goScheduleDetail(item.id, item.type, item.oneTime);
           break;
         case "del":
           this.$confirm("確定要刪除此排程嗎？", "提示", {
@@ -211,16 +219,34 @@ export default {
           break;
       }
     },
-    updateSchedule(item, status) {
-      item.enable = status;
-      this.$api.updateSchedule(item).then((res) => {
-        this.$notify({
-          title: "成功",
-          message: "更新成功！",
-          type: "success",
-        });
-      });
+    // 前往對應排程作業頁修改
+    goScheduleDetail(id, type, oneTime) {
+      switch (type) {
+        case 1:
+          if (!!oneTime) {
+            /* 手動執行 */
+            this.$router.push({ name: "manualExecute", query: { id: id } });
+          } else {
+            /* 排程設定 */
+            this.$router.push({ name: "scheduleSetting", query: { id: id } });
+          }
+          break;
+        case 3:
+          /* 回朔分析 */
+          this.$router.push({ name: "backtrackAnalysis", query: { id: id } });
+          break;
+      }
     },
+    // updateSchedule(item, status) {
+    //   item.enable = status;
+    //   this.$api.updateSchedule(item).then((res) => {
+    //     this.$notify({
+    //       title: "成功",
+    //       message: "更新成功！",
+    //       type: "success",
+    //     });
+    //   });
+    // },
     delSchedule(id) {
       this.$store.dispatch("loadingHandler", true);
       const delInfo = {
@@ -258,23 +284,25 @@ export default {
   position: relative;
 
   &__setting {
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    right: 0;
-    padding: 16px 8px;
-    background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
-    transition: 0.6s;
-    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #191970;
 
-    strong {
-      color: white;
-    }
+    i {
+      font-size: 20px;
+      padding: 0 16px;
+      transition: 0.4s;
+      cursor: pointer;
 
-    &:hover {
-      background: #038bb4;
+      &.goRound {
+        transform: rotate(180deg);
+      }
+
+      &:hover {
+        color: #00abb9;
+      }
     }
   }
 

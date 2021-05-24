@@ -4,13 +4,13 @@
 
       <div class="scheduleName">
         <label>排程名稱：</label>
-        <el-input v-model="listQuery.Name"></el-input>
+        <el-input v-model="listQuery.name"></el-input>
       </div>
 
       <div class="enable">
         <label>啟動：</label>
-        <el-radio v-model="listQuery.Enable" label="Y">Y</el-radio>
-        <el-radio v-model="listQuery.Enable" label="N">N</el-radio>
+        <el-radio v-model="listQuery.enable" label="Y">Y</el-radio>
+        <el-radio v-model="listQuery.enable" label="N">N</el-radio>
       </div>
 
       <div class="enableList">
@@ -20,7 +20,7 @@
         <div class="enableList__body">
           <div class="enableList__body--hour">
             <label>時：</label>
-            <el-select class="w-full" v-model="listQuery.RegularHour" placeholder="請選擇時">
+            <el-select class="w-full" v-model="listQuery.regularHour" placeholder="請選擇時">
               <el-option v-for="item in 23" :key="item" :label="item" :value="item"></el-option>
             </el-select>
             <p>24小時制（00-23）</p>
@@ -28,7 +28,7 @@
 
           <div class="enableList__body--min">
             <label>分：</label>
-            <el-select class="w-full" v-model="listQuery.RegularMinute" placeholder="請選擇分">
+            <el-select class="w-full" v-model="listQuery.regularMinute" placeholder="請選擇分">
               <el-option v-for="item in 59" :key="item" :label="item" :value="item"></el-option>
             </el-select>
             <p>（00-59）</p>
@@ -50,20 +50,20 @@ export default {
     return {
       listQuery: {
         userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
-        Type: 1,
-        Name: "",
-        Enable: "Y",
-        RegularHour: "",
-        RegularMinute: "",
+        type: 1,
+        name: "",
+        enable: "Y",
+        regularHour: "",
+        regularMinute: "",
       },
     };
   },
   methods: {
     add() {
       if (
-        this.listQuery.Name == "" ||
-        this.listQuery.RegularHour == "" ||
-        this.listQuery.RegularMinute == ""
+        this.listQuery.name == "" ||
+        this.listQuery.regularHour == "" ||
+        this.listQuery.regularMinute == ""
       ) {
         this.$notify({
           title: "警告",
@@ -95,6 +95,27 @@ export default {
         })
         .catch(() => {});
     },
+    getList() {
+      const infoQuery = {
+        Type: 1,
+        page: 1,
+        pageSize: 999,
+        query: "",
+        userId: JSON.parse(window.localStorage.getItem("userInfo")).userId,
+      };
+      this.$api.getScheduleList(infoQuery).then((res) => {
+        this.listQuery = res.data.filter(
+          (resp) => resp.id == this.$route.query.id
+        )[0];
+        this.$store.dispatch("loadingHandler", false);
+      });
+    },
+  },
+  mounted() {
+    if (!!this.$route.query?.id) {
+      this.$store.dispatch("loadingHandler", true);
+      this.getList();
+    }
   },
 };
 </script>

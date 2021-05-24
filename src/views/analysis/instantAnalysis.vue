@@ -211,10 +211,8 @@ export default {
     z-index: 10;
     top: 0;
     right: 0;
-    padding: 16px 8px;
+    padding: 8px 16px;
     background: #00abb9;
-    -webkit-writing-mode: vertical-lr;
-    writing-mode: vertical-lr;
     transition: 0.6s;
     cursor: pointer;
 

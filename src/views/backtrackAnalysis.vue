@@ -1,10 +1,6 @@
 <template>
   <div class="backtrackAnalysis">
-    <div class="backtrackAnalysis__setting" @click="openSearchBox = !openSearchBox">
-      <strong>查詢設定</strong>
-    </div>
-
-    <transition name="moveR">
+    <transition name="moveT">
       <div class="backtrackAnalysis__searchBox" v-if="openSearchBox">
         <div class="backtrackAnalysis__searchBox--datetime">
           <label>分析日期：</label>
@@ -27,6 +23,10 @@
         </div>
       </div>
     </transition>
+
+    <div class="backtrackAnalysis__setting" @click="openSearchBox = !openSearchBox">
+      <i class="el-icon-caret-bottom" :class="{'goRound': openSearchBox}"></i>
+    </div>
 
     <div class="backtrackAnalysis__listBox">
       <div class="backtrackAnalysis__listBox--title">
